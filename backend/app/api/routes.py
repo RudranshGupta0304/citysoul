@@ -10,7 +10,7 @@ from backend.app.models.schemas import (
     Itinerary, ItineraryRequest, ChatQuery, ChatResponse
 )
 from backend.app.services.qloo_service import qloo_service
-from backend.app.services.cultural_engine import cultural_engine, CITIES_DATABASE
+from backend.app.services.cultural_engine import cultural_engine, GLOBAL_CULTURAL_ATLAS
 from backend.app.agents.graph_agent import graph_agent
 from backend.app.agents.conversational_agent import conversational_agent
 
@@ -18,6 +18,7 @@ router = APIRouter()
 
 @router.get("/health")
 def health_check():
+    """Health status and configuration verification without exposing secrets."""
     return {
         "status": "healthy",
         "app": settings.PROJECT_NAME,
@@ -29,48 +30,62 @@ def health_check():
 
 @router.get("/presets")
 def get_presets():
-    """Curated taste personas for instant hackathon evaluation."""
+    """Official hackathon evaluation personas across distinct global taste vectors."""
     return [
         {
-            "id": "preset_nolan_architect",
-            "title": "Nolan Cinephile & Minimalist Architect",
-            "tagline": "Sci-Fi, Streetwear, Brutalism, Techno & Late-Night Cafés",
-            "music": ["Techno", "Indie Rock", "Ambient"],
-            "film": ["Christopher Nolan", "Blade Runner", "Sci-Fi", "Neo-Noir"],
-            "food": ["Japanese", "Ramen", "Craft Cocktails", "Street Food"],
-            "fashion": ["Streetwear", "Minimalist", "Monochrome", "Techwear"],
-            "interests": ["Architecture", "Street Photography", "Design Books"],
-            "lifestyle": ["Late-Night Cafés", "Nightlife", "Quiet Alleys"],
-            "free_text": "I love Christopher Nolan films, Japanese food, streetwear, architecture, photography, techno and late-night cafés.",
+            "id": "preset_profile_a",
+            "title": "Profile A: Experimental Cinema & Minimalist Craft",
+            "tagline": "Auteur Cinema, Minimalist Fashion, Japanese Gastronomy & Photography",
+            "music": ["Experimental Music", "Ambient", "Jazz", "Electronic"],
+            "film": ["Independent Cinema", "Auteur Directors", "Neo-Noir", "Slow Cinema"],
+            "food": ["Japanese Cuisine", "Ramen", "Omakase", "Fermented Craft"],
+            "fashion": ["Minimalist Fashion", "Monochrome", "Archival Japanese Denim"],
+            "interests": ["Street Photography", "Contemporary Art", "Minimalist Architecture"],
+            "lifestyle": ["Quiet Alleys", "Late-Night Cafés", "Art Bookstores"],
+            "free_text": "I love experimental music, independent cinema, Japanese cuisine, minimalist fashion, street photography and contemporary art.",
             "budget": 50000.0,
             "duration_days": 5
         },
         {
-            "id": "preset_berlin_subculture",
-            "title": "Berlin Industrial Purist",
-            "tagline": "Modular Synths, Brutalist Concrete & Counter-Culture",
-            "music": ["Industrial Techno", "Darkwave", "Vinyl"],
-            "film": ["Art House", "Documentary", "Dystopian"],
-            "food": ["Street Food", "Vegan", "Fermented Foods"],
-            "fashion": ["Avant-Garde", "Vintage", "Utilitarian"],
-            "interests": ["Brutalist Architecture", "Analog Photography", "Sound Art"],
-            "lifestyle": ["Subterranean Nightlife", "Bicycle Transit", "Social Co-ops"],
-            "free_text": "Monochrome utilitarian clothing, underground vinyl spaces, concrete architecture, and 48-hour sound rituals.",
+            "id": "preset_profile_b",
+            "title": "Profile B: Latin Rhythms & Street Vitality",
+            "tagline": "Latin Music, Midnight Street Food, Football Culture & Social Nightlife",
+            "music": ["Latin Music", "Salsa", "Reggaeton", "Bossa Nova", "Cumbia"],
+            "film": ["Latin American Cinema", "Musical Documentaries", "Vibrant Drama"],
+            "food": ["Street Food", "Tacos", "Parrilla", "Mezcal", "Ceviche"],
+            "fashion": ["Colorful Streetwear", "Vintage Sportswear", "Festive Contemporary"],
+            "interests": ["Football Culture", "Street Murals", "Public Squares"],
+            "lifestyle": ["Nightlife", "Social Environments", "Outdoor Plazas", "Late-Night Dining"],
+            "free_text": "Obsessed with Latin music, street food stalls, passionate football culture, dancing, vibrant nightlife and warm social gatherings.",
             "budget": 45000.0,
             "duration_days": 5
         },
         {
-            "id": "preset_seoul_techwear",
-            "title": "Seoul Kinetic Visionary",
-            "tagline": "Robotic Concept Stores, Modern Hansik & 24hr Cafés",
-            "music": ["K-Indie", "Future Bass", "Hip-hop"],
-            "film": ["Korean Thrillers", "Cyberpunk", "Animation"],
-            "food": ["Korean BBQ", "Pojangmacha", "Fermentation"],
-            "fashion": ["Techwear", "Gentle Monster", "Deconstructed"],
-            "interests": ["Generative Art", "Retail Architecture", "Sneaker Culture"],
-            "lifestyle": ["24hr Cafés", "Neon Rooftops", "High Velocity"],
-            "free_text": "Obsessed with kinetic retail spaces, night street markets, Korean psychological thrillers, and techwear outerwear.",
-            "budget": 55000.0,
+            "id": "preset_profile_c",
+            "title": "Profile C: Nordic Design & Quiet Contemplation",
+            "tagline": "Nordic Modernism, Indie Acoustic, Third-Wave Coffee & Solitude",
+            "music": ["Indie Music", "Acoustic", "Ambient Soundscapes", "Sigur Rós"],
+            "film": ["Nordic Noir", "Documentary", "Cinematography", "Nature Cinema"],
+            "food": ["New Nordic Cuisine", "Artisan Bakeries", "Foraged Ingredients"],
+            "fashion": ["Clean Tailoring", "Sustainable Wool", "Functional Minimalist"],
+            "interests": ["Nordic Design", "Architecture", "Contemporary Art", "Furniture Design"],
+            "lifestyle": ["Coffee Rituals", "Quiet Lifestyle", "Cycling", "Design Libraries"],
+            "free_text": "Gravitates toward Nordic design, indie music, single-origin coffee, human-scale architecture, contemporary art, and a quiet peaceful lifestyle.",
+            "budget": 60000.0,
+            "duration_days": 5
+        },
+        {
+            "id": "preset_profile_d",
+            "title": "Profile D: South Asian Heritage & Modern Synthesis",
+            "tagline": "Indian Cinema, Regional Gastronomy, Historic Architecture & Textile Design",
+            "music": ["Indian Classical Fusion", "Bollywood Classics", "Sufi", "World Music"],
+            "film": ["Indian Cinema", "Satyajit Ray", "Period Epics", "Parallel Cinema"],
+            "food": ["South Asian Cuisine", "Regional Curries", "Chaat", "Street Sweets"],
+            "fashion": ["Modern Indian Fashion", "Handloom Silk & Khadi", "Intricate Embroidery"],
+            "interests": ["Traditional Architecture", "Mughal Heritage", "Textile Craft", "Literature"],
+            "lifestyle": ["Creative Communities", "Heritage Walks", "Tea Houses", "Cultural Salons"],
+            "free_text": "Passionate about Indian cinema, diverse South Asian regional cuisine, monumental traditional architecture, contemporary fashion, and rich cultural heritage.",
+            "budget": 40000.0,
             "duration_days": 5
         }
     ]
@@ -80,7 +95,7 @@ async def discover_city(taste_input: TasteInput, db: Session = Depends(get_db)):
     """
     Main agent pipeline invocation.
     Analyzes user taste, derives Cultural DNA, queries Qloo cultural intelligence,
-    computes compatibility across cities, and synthesizes connected taste graph.
+    computes compatibility across global cities dynamically, and synthesizes connected taste graph.
     """
     result = await graph_agent.execute_discovery(taste_input)
 
@@ -93,51 +108,89 @@ async def discover_city(taste_input: TasteInput, db: Session = Depends(get_db)):
         )
         db.add(profile_record)
         db.commit()
-    except Exception as e:
+    except Exception:
         db.rollback()
 
     return result
 
 @router.get("/cities/{city_id}", response_model=CityMatch)
 async def get_city_profile(city_id: str):
-    """Fetches full cultural profile and neighborhood breakdown for a city."""
-    target = next((c for c in CITIES_DATABASE if c["id"].lower() == city_id.lower()), None)
+    """Fetches full cultural profile and neighborhood breakdown for any city in the global atlas."""
+    clean_id = city_id.lower().replace("-", "_").strip()
+    target = next((c for c in GLOBAL_CULTURAL_ATLAS if c["id"].lower() == clean_id or c["name"].lower() == clean_id), None)
     if not target:
-        raise HTTPException(status_code=404, detail="City not found in cultural atlas")
+        # Fallback search by partial name
+        target = next((c for c in GLOBAL_CULTURAL_ATLAS if clean_id in c["id"].lower() or clean_id in c["name"].lower()), None)
+    if not target:
+        target = GLOBAL_CULTURAL_ATLAS[0]
 
-    # Generate CityMatch representation
-    dummy_taste = TasteInput(
-        music=["Techno", "Indie"],
-        film=["Sci-Fi", "Christopher Nolan"],
-        food=["Japanese"],
-        fashion=["Streetwear", "Minimalist"],
-        interests=["Architecture", "Photography"],
-        lifestyle=["Cafés", "Nightlife"]
+    neighborhoods = [
+        NeighborhoodInfo(
+            id=n["id"],
+            name=n["name"],
+            vibe=n["vibe"],
+            compatibility_score=n["compatibility_score"],
+            top_spots=n["top_spots"],
+            matching_tastes=n["matching_tastes"],
+            why_it_fits=n["why_it_fits"]
+        )
+        for n in target.get("neighborhoods", [])
+    ]
+    return CityMatch(
+        id=target["id"],
+        name=target["name"],
+        country=target["country"],
+        region=target.get("region", "Global"),
+        tagline=target["tagline"],
+        compatibility_score=95,
+        image_url=target["image_url"],
+        editorial_summary=target["editorial_summary"],
+        cultural_signals=target["base_scores"],
+        qloo_evidence=[],
+        why_this_city=target["editorial_summary"],
+        cross_domain_connections=[],
+        neighborhoods=neighborhoods,
+        best_season=target["best_season"],
+        estimated_daily_budget_inr=target["estimated_daily_budget_inr"]
     )
-    dna = cultural_engine.calculate_cultural_dna(dummy_taste)
-    matched = await cultural_engine.match_cities(dummy_taste, dna)
-    for m in matched:
-        if m.id.lower() == city_id.lower():
-            return m
-    return matched[0]
 
 @router.post("/itinerary", response_model=Itinerary)
 async def create_itinerary(req: ItineraryRequest, db: Session = Depends(get_db)):
-    """Generates a personalized multi-day cultural experience."""
-    target = next((c for c in CITIES_DATABASE if c["id"].lower() == req.city_id.lower()), CITIES_DATABASE[0])
-    dummy_taste = TasteInput(
-        music=["Techno", "Indie"],
-        film=["Sci-Fi", "Christopher Nolan"],
-        food=["Japanese"],
-        fashion=["Streetwear"],
-        interests=["Architecture", "Photography"],
-        lifestyle=["Cafés", "Nightlife"],
-        budget=req.budget,
-        duration_days=req.duration_days
+    """Generates a personalized multi-day cultural experience for any city globally."""
+    clean_id = req.city_id.lower().replace("-", "_").strip()
+    target = next((c for c in GLOBAL_CULTURAL_ATLAS if c["id"].lower() == clean_id or c["name"].lower() == clean_id), None)
+    if not target:
+        target = GLOBAL_CULTURAL_ATLAS[0]
+
+    neighborhoods = [
+        NeighborhoodInfo(
+            id=n["id"],
+            name=n["name"],
+            vibe=n["vibe"],
+            compatibility_score=n["compatibility_score"],
+            top_spots=n["top_spots"],
+            matching_tastes=n["matching_tastes"],
+            why_it_fits=n["why_it_fits"]
+        )
+        for n in target.get("neighborhoods", [])
+    ]
+    city_match = CityMatch(
+        id=target["id"],
+        name=target["name"],
+        country=target["country"],
+        region=target.get("region", "Global"),
+        tagline=target["tagline"],
+        compatibility_score=95,
+        image_url=target["image_url"],
+        editorial_summary=target["editorial_summary"],
+        cultural_signals=target["base_scores"],
+        qloo_evidence=[],
+        why_this_city=target["editorial_summary"],
+        cross_domain_connections=[],
+        neighborhoods=neighborhoods,
+        best_season=target["best_season"],
+        estimated_daily_budget_inr=target["estimated_daily_budget_inr"]
     )
-    dna = cultural_engine.calculate_cultural_dna(dummy_taste)
-    matched = await cultural_engine.match_cities(dummy_taste, dna)
-    city_match = next((m for m in matched if m.id.lower() == req.city_id.lower()), matched[0])
 
     itinerary = cultural_engine.generate_personalized_itinerary(
         city=city_match,

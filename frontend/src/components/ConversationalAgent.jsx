@@ -9,7 +9,14 @@ const QUICK_PROMPTS = [
   "What if I care more about nightlife?"
 ];
 
-export default function ConversationalAgent({ isOpen, onClose, currentCityId, profileId, onBudgetAdjusted }) {
+export default function ConversationalAgent({ isOpen, onClose, currentCityId, currentCityName, profileId, onBudgetAdjusted }) {
+  const quickPrompts = [
+    currentCityName ? `Why ${currentCityName} for my profile?` : "Why this city for my profile?",
+    "What if I only have ₹30,000?",
+    "I don't like crowded places.",
+    "What if I care more about nightlife?"
+  ];
+
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
@@ -38,7 +45,7 @@ export default function ConversationalAgent({ isOpen, onClose, currentCityId, pr
     try {
       const response = await sendAgentMessage({
         message: queryText,
-        city_id: currentCityId || 'tokyo',
+        city_id: currentCityId || '',
         profile_id: profileId,
         history: messages.slice(-4)
       });

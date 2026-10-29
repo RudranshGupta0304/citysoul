@@ -24,7 +24,7 @@ class QlooEntity(BaseModel):
     category: str
     score: Optional[float] = None
     urn: Optional[str] = None
-    tags: List[str] = Field(default_factory=list)
+    tags: List[Any] = Field(default_factory=list)
 
 class QlooEvidence(BaseModel):
     source_interest: str
@@ -74,6 +74,8 @@ class CityMatch(BaseModel):
     neighborhoods: List[NeighborhoodInfo]
     best_season: str
     estimated_daily_budget_inr: int
+    region: Optional[str] = "Global"
+    calculation_breakdown: Optional[Dict[str, float]] = None
 
 class AgentStepLog(BaseModel):
     step_id: str

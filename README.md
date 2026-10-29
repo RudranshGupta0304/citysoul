@@ -1,279 +1,239 @@
 # CitySoul — Find the city that feels like you.
 
-> **"A culturally intelligent AI agent that discovers where your taste belongs."**  
-> *Built for the Qloo Agentic Hackathon 2026*
+> **"An agentic cultural-intelligence platform that uses Qloo to understand a user's cross-domain tastes and discover the cities, neighborhoods, and experiences that genuinely fit their cultural identity."**  
+> *Built for the Qloo Agentic Hackathon: "Agents, but with taste."*
+
+[![MIT License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-1.0-009688.svg)](https://fastapi.tiangolo.com)
+[![React](https://img.shields.io/badge/React-18.0-61dafb.svg)](https://react.dev)
+[![Qloo API](https://img.shields.io/badge/Qloo%20API-v2%20Live-00e5ff.svg)](https://qloo.com)
 
 ---
 
-## 🌟 1. Overview & Problem Statement
+## 🧭 1. Problem
 
-Current AI travel and city recommendation systems are mostly generic. When a traveler asks:
+Current AI city and travel recommendation systems optimize for broad popularity and generic tourism metrics. When an individual asks:
+
 > *"Which city should I visit?"*
 
-Standard LLMs respond with generic top-10 tourist destinations based on crowd popularity. They treat travel as a checklist rather than a cultural match.
+Standard LLMs respond with generic top-10 crowd destinations (Paris, Rome, New York) based on demographic popularity. They treat travel as a tourist checklist rather than a cultural match.
 
-**CitySoul solves a deeper problem: Which city or creative neighborhood is culturally compatible with *THIS* specific individual?**
-
-CitySoul understands a person's taste across multiple creative domains—**Cinema, Underground Music, Architectural Aesthetics, Gastronomy, Fashion Subcultures, and Lifestyle Rhythms**—and uses **Qloo's Cultural Intelligence Graph** to discover non-obvious affinities linking those passions to urban cultural ecosystems.
+People possess complex, idiosyncratic cultural identities shaped across music, cinema, architecture, gastronomy, fashion subcultures, and lifestyle rhythms. A traveler who loves underground ambient sound, auteur cinema, brutalist concrete, and specialty coffee will feel profoundly alienated in a generic tourist hub, but entirely at home in a specific creative quarter.
 
 ---
 
-## 🧠 2. Why Qloo is Core (The Critical Differentiator)
+## 💡 2. Solution: CitySoul
 
-### What does CitySoul do that a normal LLM cannot do as reliably?
+**CitySoul is an agentic cultural-intelligence platform answering a fundamentally different question:**
 
-| Capability | Standard LLM Travel Tools | CitySoul + Qloo Cultural Intelligence |
+> **"Which city feels culturally compatible with ME?"**  
+> *(Not: "What are the most popular cities?")*
+
+CitySoul extracts nuanced cross-domain taste signals from natural language, resolves them into Qloo's cultural ontology, traverses Qloo's live taste graph to discover non-obvious affinities linking passions to urban creative hubs, evaluates candidates globally across 7 continents, and generates personalized neighborhood itineraries and explainable match rationales.
+
+---
+
+## 🧠 3. Why Qloo is Essential
+
+CitySoul materially depends on Qloo. If Qloo were removed, CitySoul would degrade into a generic travel database.
+
+| Capability | Generic LLM / Travel Tools | CitySoul + Qloo Cultural Intelligence |
 | :--- | :--- | :--- |
-| **Cultural Mapping** | Hallucinates plausible-sounding correlations without grounded data | Traverses Qloo's verified taste ontology with empirical cross-domain affinity scores |
-| **Recommendation Rationale** | Superficial ("You like anime, go to Tokyo") | Deep structural affinities ("Christopher Nolan's neo-noir world-building bridges to Japanese architectural metabolism, Daikanyama's archival fashion, and audiophile jazz kissas") |
-| **Micro-Urban Resolution** | Stops at city level | Resolves down to specific creative neighborhoods (e.g., Shimokitazawa vs. Daikanyama vs. Kreuzberg) |
-| **Explainability** | Black-box generated text | Visual, verifiable node graph proving why specific interests link to a destination |
-
-> **If Qloo were removed, CitySoul would degrade into another generic chatbot. With Qloo, it becomes a cultural compass.**
+| **Cultural Mapping** | Hallucinates plausible-sounding correlations without empirical grounding | Traverses Qloo's taste ontology with empirical cross-domain affinity scores |
+| **Recommendation Rationale** | Superficial ("You like anime, go to Tokyo") | Deep structural affinities (e.g. Auteur neo-noir cinema bridges to brutalist architectural metabolism, archival fashion, and audiophile listening bars) |
+| **Micro-Urban Resolution** | Stops at city level | Resolves down to specific creative neighborhoods and verifiable venues |
+| **Global Discovery** | Recommends static popular tourist destinations | Dynamically surfaces global candidate locations across Asia, Europe, North America, South America, Africa, and Oceania |
+| **Explainability** | Black-box text generation | Three-Layer Explainability: What Qloo Provided vs. What CitySoul Calculated vs. What the Agent Explains |
 
 ---
 
-## 🏗️ 3. Agent Architecture
+## 🔄 4. Complete Agent Workflow
 
-CitySoul does not use a monolithic prompt. It executes a multi-node agentic workflow:
+CitySoul does not use a single monolithic prompt. It executes a multi-node agentic pipeline:
 
 ```text
-[User Preferences & Free-Text Prompt]
-                 ↓
-[Node 1: Preference Extraction & Semantic Tone Parsing]
-                 ↓
-[Node 2: 8-Pillar Cultural DNA Computation]
-                 ↓
-[Node 3: Qloo Entity Search & URN Resolution]
-                 ↓
-[Node 4: Qloo Cross-Domain Affinity Mapping]
-                 ↓
-[Node 5: City Candidate Compatibility Scoring]
-                 ↓
-[Node 6: Neighborhood & Spatial Synthesis]
-                 ↓
-[Node 7: Personalized Multi-Day Itinerary Planner]
-                 ↓
-[Node 8: Persistent Conversational Agent (Adaptive Reasoning)]
+USER TASTES & NATURAL LANGUAGE
+               ↓
+[Node 1: Preference Extraction]
+Convert raw inputs and free-text into structured taste signals.
+               ↓
+[Node 2: Qloo Entity Resolution]
+Resolve seeds to Qloo entities (/search) with URN identifiers & tags.
+               ↓
+[Node 3: 8-Pillar Cultural DNA Computation]
+Calculate dimensional weights across Architecture, Cinema, Gastronomy, Fashion, Music, Photography, Cafes, and Nightlife.
+               ↓
+[Node 4: Global Candidate Discovery]
+Surfaces worldwide candidate locations via Qloo place affinities and global cultural atlas.
+               ↓
+[Node 5: Live Qloo Cultural Consultation]
+Query Qloo (/insights) conditioned on user entities and candidate locations for real places & affinities.
+               ↓
+[Node 6: CitySoul Compatibility Ranking]
+Calculate explainable CitySoul Match (0–100%) based on Qloo evidence (40%), domain vector alignment (35%), taste resonance (15%), and budget fit (10%).
+               ↓
+[Node 7: Three-Layer Explanation Synthesis]
+Explain why each city matches: Layer 1 (Qloo Data) + Layer 2 (Calculation) + Layer 3 (Agent Narrative).
+               ↓
+[Node 8: Neighborhood & Itinerary Generation]
+Assemble micro-urban quarters and adaptive multi-day cultural itineraries.
+               ↓
+[Node 9: Conversational Adaptation]
+Persistent agent responds to budget constraints, pace changes, and recalibrates recommendations.
 ```
 
-### Observable Agent Execution
-During discovery, CitySoul displays an authentic animated agent thought stream:
-- `Understanding your preferences... ✓`
-- `Mapping your cultural profile... ✓`
-- `Exploring cross-domain affinities... ✓`
-- `Consulting Qloo... ✓`
-- `Comparing cities... ✓`
-- `Finding your strongest matches... ✓`
+---
+
+## ✨ 5. Key Features
+
+1. **Cultural DNA Profiling**: Visual breakdown across 8 creative dimensions (Architecture, Cinema, Gastronomy, Fashion, Music, Photography, Café Culture, Nightlife).
+2. **Qloo Cultural Intelligence**: Empirical cross-domain correlations connecting seeds (e.g. music artists or directors) to urban venues and cultural spaces.
+3. **Genuine Global Discovery**: Dynamic discovery across 7 global regions (East Asia, South Asia, Western Europe, Nordic Europe, Latin America, North Africa, Oceania) with **zero four-city/four-country limitation**.
+4. **Three-Layer "Why This City?"**:
+   - *Layer 1 — What Qloo Provided*: Verifiable entities, place affinities, and correlation scores.
+   - *Layer 2 — What CitySoul Calculated*: Exact mathematical score breakdown across 4 weighted components.
+   - *Layer 3 — What the Agent Explains*: Grounded narrative connecting user passions to the living urban fabric.
+5. **Connected Taste Graph**: Interactive node-and-edge visualization demonstrating how cross-domain affinities bridge user identity to destination ecosystems.
+6. **Neighborhood Intelligence**: Explores creative enclaves (e.g., Daikanyama, Kreuzberg, Vesterbro, Roma Norte, Palermo Soho, Kala Ghoda, Fitzroy) where specific subcultures congregate.
+7. **Personalized Multi-Day Itineraries**: Daily schedules adapted to duration and financial constraints (scaled automatically to user budgets).
+8. **Adaptive Conversational Agent**: Handles natural language follow-ups (e.g. *"What if I only have ₹30,000?"*, *"I prefer quiet spaces"*, *"Compare Tokyo vs. Copenhagen"*) and recalculates dynamically.
 
 ---
 
-## 🎯 4. Key Product Features
-
-### 1. Stage 01 — Discover Me
-- Interactive taste selector covering **Music**, **Film & Directors**, **Food & Dining**, **Fashion & Aesthetics**, **Interests & Arts**, and **Lifestyle**.
-- Natural language free-text parser (e.g. *"I love cyberpunk aesthetics, late-night cafés, photography and underground music"*).
-- Financial & duration constraints (e.g., ₹50,000 / 5 days).
-- **Instant Test Presets**: Evaluators can test rich personas with a single click (*"Nolan Cinephile & Minimalist Architect"*, *"Berlin Industrial Purist"*, *"Seoul Kinetic Visionary"*).
-
-### 2. Stage 02 — Your Cultural DNA
-- Visual breakdown of 8 core creative dimensions:
-  - Architecture & Spatial Form
-  - Cinema & Visual Narrative
-  - Gastronomy & Culinary Craft
-  - Fashion & Subcultural Style
-  - Music & Sound Explorations
-  - Photography & Visual Rhythm
-  - Café Culture & Third Spaces
-  - Nightlife & Subterranean Pulse
-- *Clearly labeled as internally computed CitySoul profile signals to maintain complete transparency with API scores.*
-
-### 3. Stage 03 — City Matches
-- Primary reveal (e.g., **01 — TOKYO: 95% Cultural Compatibility**).
-- Ecosystem affinity breakdown meters across all 8 dimensions.
-- Highlighting empirical Qloo cross-domain discoveries.
-- Alternative city resonances (**Seoul 91%**, **Berlin 88%**, **London 84%**).
-
-### 4. "Why This City?" (Explainability Engine)
-- Visual connected node sequence:
-  ```text
-  Christopher Nolan / Sci-Fi
-              ↓
-  Brutalist & Neon Geometries
-              ↓
-  Japanese Metabolism & Craft
-              ↓
-  Ura-Harajuku & Daikanyama
-              ↓
-            TOKYO
-  ```
-- Clear narrative explaining the non-obvious cultural bridges uncovered by Qloo.
-
-### 5. "Taste Connections" (Cross-Domain Graph)
-- Interactive graph demonstrating how interests in one domain (e.g. film directors) structurally predict affinities in design, retail craft, and urban neighborhoods.
-
-### 6. "Find My Neighborhood" (Micro-Urban Matching)
-- Enclave breakdown for recommended cities:
-  - **Shimokitazawa**: Indie vinyl sanctuaries, vintage denim curators, pour-overs.
-  - **Daikanyama**: Architectural serenity, T-Site, low-rise Japanese fashion ateliers.
-  - **Shinjuku / Golden Gai**: Blade Runner neon, 6-seat micro-bars.
-  - **Nakameguro**: Canal-side artisan coffee and modernist galleries.
-
-### 7. "Build My Experience" (Personalized Multi-Day Itinerary)
-- Complete 5-day day-by-day experience organized by morning, afternoon, and night slots.
-- Direct cultural connections for every activity and estimated budget breakdowns.
-
-### 8. "Compare My Matches"
-- Side-by-side comparative matrix between top cities across all cultural pillars.
-
-### 9. Persistent Conversational AI Agent
-- Interactive drawer allowing queries like:
-  - *"Why Tokyo instead of Seoul?"*
-  - *"What if I only have ₹30,000?"*
-  - *"I don't like crowded places."*
-  - *"What if I care more about nightlife?"*
-- Recalibrates budgets and itineraries without restarting the entire flow.
-
----
-
-## 🛠️ 5. Tech Stack
+## 💻 6. Tech Stack
 
 - **Frontend**: React 18, Vite, Tailwind CSS, Lucide React Icons
-- **Backend**: Python 3.14, FastAPI, Uvicorn, Pydantic v2, HTTPX
-- **Database**: SQLite (SQLAlchemy ORM, seamlessly migratable to PostgreSQL)
-- **External Intelligence**: Qloo API (`https://hackathon.api.qloo.com/v2`)
-- **Design Philosophy**: Neo-Cultural Intelligence (Deep obsidian `#05070a`, electric cyan `#00e5ff`, cultural violet `#8a2be2`, glassmorphism, animated ambient nodes)
+- **Backend**: Python 3.10+, FastAPI, Uvicorn, Pydantic v2, HTTPX
+- **Database**: SQLite (SQLAlchemy ORM)
+- **Cultural Intelligence**: Qloo API v2 (`https://hackathon.api.qloo.com/v2`)
+- **Reasoning Agent**: Google Gemini Flash Lite (with internal deterministic Cultural Intelligence engine fallback)
+- **Styling**: Neo-Cultural Dark Aesthetic (Deep Obsidian `#05070a`, Electric Cyan `#00e5ff`, Violet `#8a2be2`, Gold `#e5b869`, Glassmorphism)
 
 ---
 
-## 📁 6. Project Structure
+## 🌍 7. Qloo API Capabilities Used
 
-```text
-Qloo/
-├── backend/
-│   ├── app/
-│   │   ├── api/
-│   │   │   └── routes.py              # Endpoints: /health, /presets, /agent/discover, /itinerary, /chat
-│   │   ├── agents/
-│   │   │   ├── graph_agent.py         # Multi-node agent workflow & observable step logs
-│   │   │   └── conversational_agent.py # Persistent adaptive AI assistant
-│   │   ├── database/
-│   │   │   └── db.py                  # SQLite database engine, ORM models, session factory
-│   │   ├── models/
-│   │   │   └── schemas.py             # Pydantic schemas (TasteInput, CityMatch, Itinerary, etc.)
-│   │   ├── services/
-│   │   │   ├── qloo_service.py        # Dedicated Qloo API client with live/demo fallback
-│   │   │   └── cultural_engine.py     # Cultural matching algorithms & taste graphs
-│   │   ├── config.py                  # Pydantic BaseSettings loading from .env
-│   │   └── main.py                    # FastAPI server with CORS & startup hooks
-│   ├── tests/
-│   │   └── test_cultural_engine.py    # Automated test suite (Pytest + Asyncio)
-│   ├── requirements.txt
-│   └── run.py                         # Backend launch script
-│
-├── frontend/
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Header.jsx             # Nav with Live Qloo status indicator
-│   │   │   ├── Hero.jsx               # Headline with animated canvas & presets
-│   │   │   ├── TasteDiscovery.jsx     # Stage 1: Interactive taste selector + freeform text
-│   │   │   ├── CulturalDNA.jsx        # Stage 2: 8-pillar cultural profile visual
-│   │   │   ├── AgentProcessing.jsx    # Stage 3: Step-by-step agent activity stream
-│   │   │   ├── CityMatches.jsx        # Stage 4: Ranked city cards & compatibility meters
-│   │   │   ├── WhyThisCity.jsx        # Connected node chain & explainability
-│   │   │   ├── TasteConnections.jsx   # Cross-domain interactive graph
-│   │   │   ├── NeighborhoodMatch.jsx  # Micro-urban neighborhood compatibility
-│   │   │   ├── ItineraryBuilder.jsx   # Multi-day personalized experience builder
-│   │   │   ├── CityComparator.jsx     # Side-by-side comparison matrix
-│   │   │   └── ConversationalAgent.jsx # Persistent floating AI drawer
-│   │   ├── services/
-│   │   │   └── api.js                 # Frontend API client
-│   │   ├── App.jsx                    # Core page orchestrator
-│   │   ├── index.css                  # Custom theme, typography & glassmorphism
-│   │   └── main.jsx
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
-│
-├── .env.example                       # Documented environment template
-├── .gitignore
-├── LICENSE                            # MIT License
-└── README.md                          # Hackathon submission documentation
-```
+CitySoul interacts exclusively with the official Qloo API v2 server-side (`QLOO_API_KEY` is never exposed to the frontend):
+
+1. **Entity Search (`GET /v2/search`)**:
+   - Resolves user input into canonical Qloo entities across persons, films, albums, brands, and culinary items.
+   - Extracts entity IDs, names, subtypes, popularity scores, and tags.
+2. **Place Affinities & Global Insights (`GET /v2/insights`)**:
+   - `filter.type = "urn:entity:place"`
+   - `signal.interests.entities = "<entity_id_1>,<entity_id_2>"`
+   - `filter.location.query = "<city_name>"`
+   - `take = 5`
+   - Returns real cultural venues, geocodes, neighborhoods, and affinity signals.
+3. **Cross-Domain Discovery**:
+   - Identifies unexpected connections (e.g. Auteur Cinema → Modernist Architectural Restraint → Specialty Coffee & Vinyl Ateliers).
 
 ---
 
-## ⚡ 7. Local Setup & Running Instructions
+## 🧪 8. Hackathon Evaluation Test Profiles
+
+To test that CitySoul produces genuinely taste-dependent, global recommendations, four distinct personas are built into the UI:
+
+- **Profile A (Experimental Cinema & Minimalist Craft)**:
+  - *Tastes*: Experimental Music, Auteur Cinema, Japanese Cuisine, Minimalist Fashion, Street Photography, Contemporary Art.
+  - *Discovered Matches*: Copenhagen (Denmark), Tokyo (Japan), Kyoto (Japan).
+- **Profile B (Latin Rhythms & Street Vitality)**:
+  - *Tastes*: Latin Music, Street Food, Football Culture, Nightlife, Social Environments.
+  - *Discovered Matches*: Buenos Aires (Argentina), São Paulo (Brazil), Mexico City (Mexico).
+- **Profile C (Nordic Design & Quiet Contemplation)**:
+  - *Tastes*: Nordic Design, Indie Music, Single-Origin Coffee, Architecture, Contemporary Art, Quiet Lifestyle.
+  - *Discovered Matches*: Copenhagen (Denmark), Melbourne (Australia), London (United Kingdom).
+- **Profile D (South Asian Heritage & Modern Synthesis)**:
+  - *Tastes*: Indian Cinema, Regional South Asian Cuisine, Traditional Architecture, Modern Fashion, Cultural Heritage.
+  - *Discovered Matches*: Delhi (India), Mumbai (India), Marrakech (Morocco).
+
+---
+
+## ⚡ 9. Local Setup & Execution
 
 ### Prerequisites
 - Python 3.10+
 - Node.js 18+ and npm
 
 ### 1. Environment Configuration
-Copy the template to `.env`:
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
 
-Open `.env` and set your Qloo API key:
+Configure your API keys in `.env`:
 ```env
 QLOO_API_KEY=your_qloo_hackathon_api_key_here
 QLOO_API_BASE_URL=https://hackathon.api.qloo.com/v2
+
+# Optional LLM Key (Google Gemini)
+LLM_API_KEY=your_gemini_api_key_here
+LLM_PROVIDER=gemini
+GEMINI_MODEL=gemini-flash-lite-latest
+
 DATABASE_URL=sqlite:///./citysoul.db
+PORT=8000
+HOST=0.0.0.0
+CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
 
-> **Note on Demo Mode:** If `QLOO_API_KEY` is not provided or quota is limited, CitySoul automatically operates in **Verified Demo Mode**, clearly identified in the UI header beacon. The complete end-to-end workflow remains fully interactive.
-
-### 2. Backend Setup & Execution
+### 2. Run Backend
 ```bash
-# Install Python dependencies
+# Install dependencies
 python -m pip install -r backend/requirements.txt
 
 # Run automated tests
 python -m pytest backend/tests/
 
-# Start the FastAPI server (runs on http://localhost:8000)
+# Start FastAPI server (serves API on port 8000 and SPA on root)
 python backend/run.py
 ```
 
-### 3. Frontend Setup & Execution
-In a separate terminal:
+### 3. Run Frontend (Development Mode)
 ```bash
 cd frontend
-
-# Install npm dependencies
 npm install
-
-# Start the Vite development server (runs on http://localhost:5173)
 npm run dev
 ```
 
-Visit **http://localhost:5173** in your browser.
+Visit `http://localhost:5173` (or `http://localhost:8000` for all-in-one production build).
 
 ---
 
-## 🧪 8. Demo Walkthrough Flow (For Hackathon Judges)
+## 🚀 10. Production Deployment
 
-Follow this 2-minute demonstration script:
+### Architecture
+- **Unified Deployment (Render / Fly.io / Railway / Heroku)**:
+  FastAPI automatically serves the built React bundle from `frontend/dist` on `/` while serving all API routes under `/api`.
+  - Build command: `npm --prefix frontend install && npm --prefix frontend run build && pip install -r backend/requirements.txt`
+  - Start command: `python backend/run.py`
+- **Decoupled Deployment (Vercel Frontend + Render Backend)**:
+  Set `VITE_API_BASE_URL=https://your-backend.onrender.com` in Vercel environment variables.
 
-1. **Open CitySoul** at `http://localhost:5173`.
-2. Notice the live **Qloo Status Beacon** in the top navigation bar.
-3. In the Hero section, click the instant test preset:  
-   **"Nolan Cinephile & Minimalist Architect"** (or craft your own profile).
-4. Click **"Find My City"**.
-5. Watch the animated **Agent Thought Stream** as it parses taste seeds, consults Qloo, and ranks destinations.
-6. Review your **Cultural DNA** breakdown (Cinema 94%, Architecture 92%, Music 90%, Gastronomy 96%).
-7. Inspect the **01 — TOKYO (95% Cultural Compatibility)** card.
-8. Click **"Why Tokyo?"** to explore the connected cross-domain node sequence:
-   *Christopher Nolan → Brutalist Geometries → Japanese Metabolism → Ura-Harajuku → Tokyo*.
-9. Click **"Neighborhoods"** to see why *Shimokitazawa* and *Daikanyama* match your profile over standard tourist hotspots.
-10. Click **"Build Experience"** to view a tailored 5-day itinerary.
-11. Click **"Ask Agent"** in the header and select:  
-    *"Why Tokyo instead of Seoul?"* or *"What if I only have ₹30,000?"*  
-    Observe the agent reasoning over your existing profile and adapting the plan.
+### Health Endpoint
+`GET /api/health`
+```json
+{
+  "status": "healthy",
+  "app": "CitySoul",
+  "version": "1.0.0",
+  "qloo_live": true,
+  "qloo_base_url": "https://hackathon.api.qloo.com/v2",
+  "mode": "live"
+}
+```
 
 ---
 
-## 📜 9. License
+## 🛡️ 11. Security & Compliance
+
+- **Zero Secrets Committed**: `.env.example` contains only sanitized dummy placeholders.
+- **Server-Side API Keys**: `QLOO_API_KEY` and `LLM_API_KEY` are strictly server-side and never exposed to client-side bundles.
+- **CORS Protection**: Restricted to designated local and production origins.
+- **No Static Fake Scores**: CitySoul compatibility scores are derived from empirical Qloo evidence, domain alignment, and keyword resonance.
+
+---
+
+## 📜 12. License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.

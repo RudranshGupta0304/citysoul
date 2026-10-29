@@ -37,6 +37,7 @@ export default function App() {
   const [discoveryData, setDiscoveryData] = useState(null);
   const [selectedCity, setSelectedCity] = useState(null);
   const [itineraryData, setItineraryData] = useState(null);
+  const [isDiscoveryReady, setIsDiscoveryReady] = useState(false);
 
   // Initial Data Fetch
   useEffect(() => {
@@ -70,20 +71,26 @@ export default function App() {
   // Run Agent Discovery Pipeline
   const handleRunDiscovery = async () => {
     setIsProcessing(true);
+    setIsDiscoveryReady(false);
     try {
       const response = await discoverCity(tasteInput);
       setDiscoveryData(response);
-      setSelectedCity(response.city_matches[0]);
+      if (response.city_matches && response.city_matches.length > 0) {
+        setSelectedCity(response.city_matches[0]);
+      }
+      setIsDiscoveryReady(true);
     } catch (err) {
       console.error("Discovery failed", err);
-      alert("CitySoul Agent ran into an issue connecting to the backend. Please check server logs.");
+      alert(err.message || "CitySoul Agent ran into an issue connecting to the backend. Please check server logs.");
       setIsProcessing(false);
+      setIsDiscoveryReady(false);
     }
   };
 
   // Callback when AgentProcessing animation completes
   const handleProcessingComplete = () => {
     setIsProcessing(false);
+    setIsDiscoveryReady(false);
     setActiveTab('matches');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -159,7 +166,7 @@ export default function App() {
 
         {/* Stage 3: Agent Processing Thought Stream */}
         {isProcessing && (
-          <AgentProcessing onComplete={handleProcessingComplete} />
+          <AgentProcessing onComplete={handleProcessingComplete} isReady={isDiscoveryReady} />
         )}
 
         {/* Stage 2 & 4: Matches & Cultural DNA */}
@@ -191,7 +198,7 @@ export default function App() {
         {activeTab === 'connections' && (
           <TasteConnections
             graphData={discoveryData?.taste_connections}
-            topCityName={selectedCity?.name || discoveryData?.city_matches[0]?.name || "Tokyo"}
+            topCityName={selectedCity?.name || discoveryData?.city_matches[0]?.name || "Destination"}
           />
         )}
 
@@ -231,7 +238,8 @@ export default function App() {
       <ConversationalAgent
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
-        currentCityId={selectedCity?.id || 'tokyo'}
+        currentCityId={selectedCity?.id || discoveryData?.city_matches[0]?.id || ''}
+        currentCityName={selectedCity?.name || discoveryData?.city_matches[0]?.name || ''}
         profileId={discoveryData?.profile_id}
         onBudgetAdjusted={(newBudget) => {
           setTasteInput(prev => ({ ...prev, budget: newBudget }));

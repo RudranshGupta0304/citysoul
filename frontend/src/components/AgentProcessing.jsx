@@ -15,17 +15,17 @@ const STEPS = [
   {
     id: 'step_3',
     label: 'Exploring cross-domain affinities...',
-    detail: 'Tracing indirect bridges between sci-fi, streetwear & underground sound'
+    detail: 'Tracing indirect bridges across sonic, visual & spatial dimensions'
   },
   {
     id: 'step_4',
     label: 'Consulting Qloo...',
-    detail: 'Querying Qloo Cultural Intelligence taste graph and place density'
+    detail: 'Querying Qloo Cultural Intelligence live taste graph and place density'
   },
   {
     id: 'step_5',
-    label: 'Comparing cities...',
-    detail: 'Evaluating cultural ecosystem alignment and neighborhood resonance'
+    label: 'Comparing global candidate cities...',
+    detail: 'Evaluating cultural ecosystem alignment and neighborhood resonance worldwide'
   },
   {
     id: 'step_6',
@@ -34,7 +34,7 @@ const STEPS = [
   }
 ];
 
-export default function AgentProcessing({ onComplete }) {
+export default function AgentProcessing({ onComplete, isReady = false }) {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
 
   useEffect(() => {
@@ -42,21 +42,26 @@ export default function AgentProcessing({ onComplete }) {
       setCurrentStepIndex(prev => {
         if (prev < STEPS.length - 1) {
           return prev + 1;
-        } else {
-          clearInterval(interval);
-          setTimeout(() => {
-            if (onComplete) onComplete();
-          }, 600);
-          return prev;
         }
+        return prev;
       });
-    }, 450);
+    }, 600);
 
     return () => clearInterval(interval);
-  }, [onComplete]);
+  }, []);
+
+  // When backend data is ready and minimum steps reached, smoothly complete
+  useEffect(() => {
+    if (isReady && currentStepIndex >= 3) {
+      const timer = setTimeout(() => {
+        if (onComplete) onComplete();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [isReady, currentStepIndex, onComplete]);
 
   return (
-    <div className="max-w-xl mx-auto px-4 py-16 text-center">
+    <div className="max-w-xl mx-auto px-4 py-16 text-center animate-fade-in">
       {/* Central Pulsing Brain / Graph Icon */}
       <div className="relative w-24 h-24 mx-auto mb-8 flex items-center justify-center">
         <div className="absolute inset-0 rounded-full bg-soul-cyan/20 animate-ping"></div>
@@ -76,21 +81,21 @@ export default function AgentProcessing({ onComplete }) {
       {/* Step List */}
       <div className="glass-panel rounded-2xl p-6 border border-white/10 text-left space-y-3.5 shadow-2xl">
         {STEPS.map((step, idx) => {
-          const isDone = idx <= currentStepIndex;
-          const isCurrent = idx === currentStepIndex;
+          const isDone = idx < currentStepIndex || (idx === currentStepIndex && isReady);
+          const isCurrent = idx === currentStepIndex && !isReady;
 
           return (
             <div 
               key={step.id} 
               className={`flex items-start gap-3 transition-all duration-300 ${
-                isDone ? 'opacity-100' : 'opacity-30'
+                isDone || isCurrent ? 'opacity-100' : 'opacity-30'
               }`}
             >
               <div className="mt-0.5">
                 {isDone ? (
                   <CheckCircle2 className="w-4 h-4 text-soul-cyan shrink-0 animate-scale" />
                 ) : (
-                  <CircleDashed className="w-4 h-4 text-slate-500 shrink-0" />
+                  <CircleDashed className={`w-4 h-4 shrink-0 ${isCurrent ? 'text-soul-cyan animate-spin' : 'text-slate-500'}`} />
                 )}
               </div>
               <div className="flex-1">
@@ -102,7 +107,7 @@ export default function AgentProcessing({ onComplete }) {
                     <span className="text-[10px] font-mono text-soul-cyan/80">✓</span>
                   )}
                 </div>
-                {isCurrent && (
+                {(isCurrent || (idx === currentStepIndex && isReady)) && (
                   <p className="text-[11px] text-slate-400 mt-0.5 font-sans animate-fade-in">
                     {step.detail}
                   </p>

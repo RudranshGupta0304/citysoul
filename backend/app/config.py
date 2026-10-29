@@ -13,7 +13,8 @@ class Settings(BaseSettings):
     
     # AI Provider
     LLM_API_KEY: str = ""
-    LLM_PROVIDER: str = "mock"  # "mock", "openai", "gemini", "anthropic"
+    LLM_PROVIDER: str = "gemini"  # "mock", "openai", "gemini", "anthropic"
+    GEMINI_MODEL: str = "gemini-flash-lite-latest"
     
     # Database
     DATABASE_URL: str = "sqlite:///./citysoul.db"
@@ -23,7 +24,13 @@ class Settings(BaseSettings):
     PORT: int = 8000
     CORS_ORIGINS: str = "http://localhost:5173,http://127.0.0.1:5173"
     
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=(
+            os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"),
+            ".env"
+        ),
+        extra="ignore"
+    )
 
     @property
     def cors_origins_list(self) -> List[str]:

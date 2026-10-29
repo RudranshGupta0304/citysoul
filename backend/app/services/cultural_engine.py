@@ -1,37 +1,29 @@
 import math
-from typing import List, Dict, Any, Tuple
+import asyncio
+from typing import List, Dict, Any, Tuple, Optional
 from backend.app.models.schemas import (
     TasteInput, CulturalDNASignal, CityMatch, NeighborhoodInfo,
     TasteConnectionGraph, TasteConnectionNode, TasteConnectionEdge,
-    Itinerary, ItineraryDay, ItineraryActivity
+    Itinerary, ItineraryDay, ItineraryActivity, QlooEvidence, QlooEntity
 )
 from backend.app.services.qloo_service import qloo_service
 
-CITIES_DATABASE: List[Dict[str, Any]] = [
+# Comprehensive Global Cultural Atlas spanning all 7 world regions
+GLOBAL_CULTURAL_ATLAS: List[Dict[str, Any]] = [
+    # East Asia
     {
         "id": "tokyo",
         "name": "Tokyo",
         "country": "Japan",
+        "region": "East Asia",
         "tagline": "The Hyper-Futuristic Sanctuary of Craft & Contrast",
         "image_url": "https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&w=1200&q=80",
         "editorial_summary": "Where Blade Runner sci-fi monoliths coexist with hidden jazz kissas, hyper-refined minimalism, and unmatched culinary dedication.",
         "base_scores": {
-            "Architecture": 95,
-            "Cinema": 94,
-            "Gastronomy": 96,
-            "Fashion": 95,
-            "Music": 90,
-            "Photography": 97,
-            "Nightlife": 89,
-            "Café Culture": 93
+            "Architecture": 95, "Cinema": 94, "Gastronomy": 96, "Fashion": 95,
+            "Music": 90, "Photography": 97, "Nightlife": 89, "Café Culture": 93
         },
-        "keywords": ["sci-fi", "nolan", "cyberpunk", "japanese", "streetwear", "minimalist", "architecture", "photography", "techno", "cafés", "jazz", "street food", "ramen"],
-        "why_template": (
-            "Your strongest cultural signals gravitate toward {top_signals}. "
-            "Qloo's cross-domain taste graph uncovered deep affinities linking your appreciation for {domain_a} "
-            "with {domain_b} and Japanese architectural restraint. "
-            "In Tokyo, this isn't just aesthetic—it's woven into everyday life across creative districts like Daikanyama and Shimokitazawa."
-        ),
+        "keywords": ["japanese", "tokyo", "ramen", "omakase", "sci-fi", "nolan", "cyberpunk", "streetwear", "minimalist", "architecture", "photography", "jazz", "street food", "craft"],
         "neighborhoods": [
             {
                 "id": "tokyo-shimokitazawa",
@@ -58,45 +50,189 @@ CITIES_DATABASE: List[Dict[str, Any]] = [
                 "compatibility_score": 92,
                 "top_spots": ["Golden Gai 6-seat Whisky Dens", "Omoide Yokocho", "Park Hyatt Tokyo New York Bar"],
                 "matching_tastes": ["Sci-Fi Cinema", "Nightlife", "Urban Photography"],
-                "why_it_fits": "Echoes the atmospheric noir of Blade Runner and Lost in Translation with towering illuminated silhouettes."
-            },
-            {
-                "id": "tokyo-nakameguro",
-                "name": "Nakameguro",
-                "vibe": "Canal-Side Artisan Cafés & Industrial Roasteries",
-                "compatibility_score": 90,
-                "top_spots": ["Starbucks Reserve Roastery (Kengo Kuma)", "Sidewalk Stand", "Cow Books"],
-                "matching_tastes": ["Café Culture", "Industrial Design", "Slow Living"],
-                "why_it_fits": "Calm waterway framed by modernist galleries, minimalist coffee bars, and independent book curators."
+                "why_it_fits": "Echoes the atmospheric noir of Blade Runner with towering illuminated silhouettes."
             }
         ],
-        "best_season": "Autumn (Oct–Nov) or Spring (Cherry Blossom / April)",
+        "best_season": "Autumn (Oct–Nov) or Spring (April)",
         "estimated_daily_budget_inr": 8500
+    },
+    {
+        "id": "kyoto",
+        "name": "Kyoto",
+        "country": "Japan",
+        "region": "East Asia",
+        "tagline": "The Meditative Heart of Zen Architecture & Ancient Refinement",
+        "image_url": "https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Subtle wooden Machiya townhouses, moss gardens, centuries-old kaiseki rituals, and quiet contemplative pottery ateliers.",
+        "base_scores": {
+            "Architecture": 98, "Cinema": 87, "Gastronomy": 97, "Fashion": 85,
+            "Music": 82, "Photography": 96, "Nightlife": 68, "Café Culture": 94
+        },
+        "keywords": ["zen", "kyoto", "japan", "minimalist", "temples", "gardens", "kaiseki", "tea", "pottery", "craft", "wood", "quiet", "contemplative", "traditional"],
+        "neighborhoods": [
+            {
+                "id": "kyoto-gion",
+                "name": "Gion & Miyagawacho",
+                "vibe": "Preserved Wooden Heritage & Hidden Teahouses",
+                "compatibility_score": 95,
+                "top_spots": ["Pass the Baton Kyoto Gion", "Kennin-ji Zen Garden", "Ichiriki Chaya"],
+                "matching_tastes": ["Traditional Architecture", "Art Craft", "Slow Living"],
+                "why_it_fits": "Labyrinth of lantern-lit stone alleys preserving centuries of architectural proportion."
+            },
+            {
+                "id": "kyoto-arashiyama",
+                "name": "Arashiyama & Sagano",
+                "vibe": "Bamboo Groves & Meditative Sanctuaries",
+                "compatibility_score": 93,
+                "top_spots": ["Tenryu-ji Temple Garden", "% Arabica Kyoto Arashiyama", "Okochi Sanso Villa"],
+                "matching_tastes": ["Third-Wave Coffee", "Nature Photography", "Zen Architecture"],
+                "why_it_fits": "Riverside pavilion blending minimalist glass coffee counters with ancient mountain horizons."
+            }
+        ],
+        "best_season": "Spring (Cherry Blossoms) or Autumn (Foliage)",
+        "estimated_daily_budget_inr": 8000
+    },
+    {
+        "id": "seoul",
+        "name": "Seoul",
+        "country": "South Korea",
+        "region": "East Asia",
+        "tagline": "The Hyper-Kinetic Nexus of Techwear, Cinematic Thrillers & 24hr Rhythms",
+        "image_url": "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "A relentless collision of Joseon dynastic palaces, jaw-dropping retail architecture, fiery midnight cuisine, and techwear innovation.",
+        "base_scores": {
+            "Architecture": 91, "Cinema": 95, "Gastronomy": 94, "Fashion": 98,
+            "Music": 92, "Photography": 95, "Nightlife": 95, "Café Culture": 97
+        },
+        "keywords": ["korean", "seoul", "streetwear", "techwear", "thriller", "korean cinema", "cafes", "nightlife", "k-pop", "photography", "modern", "design", "bbq", "pojangmacha"],
+        "neighborhoods": [
+            {
+                "id": "seoul-seongsu",
+                "name": "Seongsu-dong",
+                "vibe": "Industrial Warehouse Galleries & Concept Retail",
+                "compatibility_score": 97,
+                "top_spots": ["Daelim Changgo Gallery", "Haus Dosan / Gentle Monster", "Scene Complex"],
+                "matching_tastes": ["Techwear & Streetwear", "Adaptive Architecture", "Concept Cafés"],
+                "why_it_fits": "Converted red-brick shoe factories transformed into kinetic robotic installations and world-class concept stores."
+            },
+            {
+                "id": "seoul-hannam",
+                "name": "Hannam-dong",
+                "vibe": "Audiophile Vinyl Libraries & Contemporary Art",
+                "compatibility_score": 94,
+                "top_spots": ["Hyundai Card Music Library", "Leeum Museum of Art", "Anthracite Hannam"],
+                "matching_tastes": ["Audiophile Listening", "Architecture", "Luxury Minimalist"],
+                "why_it_fits": "Hillside precinct hosting one of the world's greatest vinyl libraries and Rem Koolhaas / Mario Botta architecture."
+            }
+        ],
+        "best_season": "Autumn (Sep–Nov) or Spring (April–May)",
+        "estimated_daily_budget_inr": 7800
+    },
+    {
+        "id": "taipei",
+        "name": "Taipei",
+        "country": "Taiwan",
+        "region": "East Asia",
+        "tagline": "The Warm Sanctuary of Night Markets, Indie Zines & Slow Cinema",
+        "image_url": "https://images.unsplash.com/photo-1508247967583-7d982ea01526?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Steaming night markets under neon overhangs, quiet Japanese colonial bookshops, tea ceremonies, and Edward Yang cinematic aesthetics.",
+        "base_scores": {
+            "Architecture": 86, "Cinema": 91, "Gastronomy": 97, "Fashion": 86,
+            "Music": 88, "Photography": 93, "Nightlife": 85, "Café Culture": 95
+        },
+        "keywords": ["taiwan", "taipei", "street food", "night market", "slow cinema", "tea", "edward yang", "indie", "cafes", "photography", "rainy", "nostalgia"],
+        "neighborhoods": [
+            {
+                "id": "taipei-daan",
+                "name": "Da'an & Yongkang",
+                "vibe": "Leafy Alleys, Artisanal Tea & Independent Books",
+                "compatibility_score": 94,
+                "top_spots": ["Wistaria Tea House", "Eslite Dunnan Heritage", "Fika Fika Cafe"],
+                "matching_tastes": ["Tea Rituals", "Independent Books", "Third-Wave Coffee"],
+                "why_it_fits": "Historic Japanese residences repurposed as tranquil cultural salons and artisan roasteries."
+            }
+        ],
+        "best_season": "October to December",
+        "estimated_daily_budget_inr": 6500
+    },
+
+    # Nordic & Western Europe
+    {
+        "id": "copenhagen",
+        "name": "Copenhagen",
+        "country": "Denmark",
+        "region": "Nordic Europe",
+        "tagline": "The Global Benchmark of Human-Scale Design, New Nordic Taste & Hygge",
+        "image_url": "https://images.unsplash.com/photo-1513622470522-26c3c8a854bc?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Unrivaled cycling infrastructure, Bjarke Ingels clean-lined architectural sanctuaries, foraging gastronomy, and quiet minimalist lifestyle.",
+        "base_scores": {
+            "Architecture": 98, "Cinema": 88, "Gastronomy": 97, "Fashion": 93,
+            "Music": 89, "Photography": 94, "Nightlife": 84, "Café Culture": 98
+        },
+        "keywords": ["nordic", "copenhagen", "denmark", "design", "furniture", "minimalist", "coffee", "architecture", "quiet", "contemporary art", "bicycle", "hygge", "gastronomy", "scandinavian"],
+        "neighborhoods": [
+            {
+                "id": "cph-vesterbro",
+                "name": "Vesterbro & Meatpacking (Kødbyen)",
+                "vibe": "Industrial Creative Galleries & Craft Dining",
+                "compatibility_score": 96,
+                "top_spots": ["Kødbyens Fiskebar", "V1 Gallery", "Prolog Coffee Bar"],
+                "matching_tastes": ["Third-Wave Coffee", "Contemporary Art", "Industrial Design"],
+                "why_it_fits": "Converted butcher pavilions transformed into cutting-edge contemporary art galleries and craft roasteries."
+            },
+            {
+                "id": "cph-norrebro",
+                "name": "Nørrebro & Jægersborggade",
+                "vibe": "Artisanal Bakeries, Ceramics & Natural Wine",
+                "compatibility_score": 95,
+                "top_spots": ["Coffee Collective Jægersborggade", "Inge Vincents Ceramics", "Manfreds / Mirabelle"],
+                "matching_tastes": ["Ceramics & Craft", "Micro-Bakeries", "Quiet Aesthetics"],
+                "why_it_fits": "Cobblestone street hosting small craft ateliers, natural wine cellars, and local pottery masters."
+            }
+        ],
+        "best_season": "May to September",
+        "estimated_daily_budget_inr": 9800
+    },
+    {
+        "id": "reykjavik",
+        "name": "Reykjavik",
+        "country": "Iceland",
+        "region": "Nordic Europe",
+        "tagline": "The Ethereal Volcanic Haven of Ambient Sound & Geometric Sanctuaries",
+        "image_url": "https://images.unsplash.com/photo-1509316975850-ff9c5deb0cd9?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Geothermal horizons, Harpa's crystalline glass facade, Sigur Rós soundscapes, and an uncompromising dedication to literary solitude.",
+        "base_scores": {
+            "Architecture": 93, "Cinema": 89, "Gastronomy": 86, "Fashion": 88,
+            "Music": 98, "Photography": 97, "Nightlife": 86, "Café Culture": 92
+        },
+        "keywords": ["iceland", "reykjavik", "sigur ros", "bjork", "ambient", "indie", "sound", "harpa", "volcanic", "nature", "quiet", "nordic", "literature", "books", "minimalist"],
+        "neighborhoods": [
+            {
+                "id": "reyk-midborg",
+                "name": "Miðborg & Grandi Harbour",
+                "vibe": "Harbour Ateliers, Maritime Roasteries & Vinyl",
+                "compatibility_score": 95,
+                "top_spots": ["Harpa Concert Hall (Henning Larsen)", "12 Tónar Record Shop & Cafe", "Reykjavik Roasters"],
+                "matching_tastes": ["Ambient Sound", "Glass Architecture", "Vinyl Rituals"],
+                "why_it_fits": "Coastal listening spaces where visitors drink pour-overs while listening to Icelandic vinyl releases."
+            }
+        ],
+        "best_season": "June to August (Midnight Sun) or Oct–March (Northern Lights)",
+        "estimated_daily_budget_inr": 10500
     },
     {
         "id": "berlin",
         "name": "Berlin",
         "country": "Germany",
+        "region": "Western Europe",
         "tagline": "The Raw Epicenter of Sound, Counterculture & Brutalism",
         "image_url": "https://images.unsplash.com/photo-1560969184-10fe8719e047?auto=format&fit=crop&w=1200&q=80",
         "editorial_summary": "Uncompromising creative freedom, monochromatic streetwear, monolithic concrete architecture, and the beating heart of electronic sound.",
         "base_scores": {
-            "Architecture": 92,
-            "Cinema": 88,
-            "Gastronomy": 83,
-            "Fashion": 93,
-            "Music": 98,
-            "Photography": 94,
-            "Nightlife": 99,
-            "Café Culture": 90
+            "Architecture": 92, "Cinema": 88, "Gastronomy": 83, "Fashion": 93,
+            "Music": 98, "Photography": 94, "Nightlife": 99, "Café Culture": 90
         },
-        "keywords": ["techno", "electronic", "underground", "brutalist", "minimalist", "vintage", "photography", "nightlife", "counterculture", "indie", "arts"],
-        "why_template": (
-            "Your cultural profile expresses an intense resonance with {top_signals}. "
-            "Qloo's cultural intelligence detects an organic nexus connecting your interest in {domain_a} "
-            "with Berlin's industrial sound architecture and counter-cultural independence. "
-            "Berlin rewards curiosity with non-commercialized artistic autonomy found nowhere else."
-        ),
+        "keywords": ["techno", "berlin", "electronic", "underground", "brutalist", "minimalist", "vintage", "photography", "nightlife", "counterculture", "indie", "arts", "concrete", "industrial"],
         "neighborhoods": [
             {
                 "id": "berlin-kreuzberg",
@@ -115,110 +251,25 @@ CITIES_DATABASE: List[Dict[str, Any]] = [
                 "top_spots": ["Boros Bunker Collection", "Do You Read Me?!", "The Barn Coffee"],
                 "matching_tastes": ["Minimalist Fashion", "Contemporary Art", "Architecture"],
                 "why_it_fits": "WWII air raid shelters converted into private contemporary art collections alongside avant-garde fashion."
-            },
-            {
-                "id": "berlin-neukolln",
-                "name": "Neukölln",
-                "vibe": "Late-Night Bohemian & Experimental Kitchens",
-                "compatibility_score": 91,
-                "top_spots": ["Klunkerkranich Rooftop", "Sameheads", "Tempelhof Airfield"],
-                "matching_tastes": ["Nightlife", "Bohemian Cafes", "Electronic Music"],
-                "why_it_fits": "Decommissioned Cold War airport turned public park and bohemian basements playing experimental live sets."
             }
         ],
-        "best_season": "Late Spring to Early Autumn (May–September)",
+        "best_season": "May to September",
         "estimated_daily_budget_inr": 7200
-    },
-    {
-        "id": "seoul",
-        "name": "Seoul",
-        "country": "South Korea",
-        "tagline": "The Hyper-Kinetic Nexus of Fashion, Tech & 24hr Sensory Pulse",
-        "image_url": "https://images.unsplash.com/photo-1538485399081-7191377e8241?auto=format&fit=crop&w=1200&q=80",
-        "editorial_summary": "A relentless collision of ancient Joseon dynasties, jaw-dropping retail architecture, fiery midnight cuisine, and techwear innovation.",
-        "base_scores": {
-            "Architecture": 91,
-            "Cinema": 93,
-            "Gastronomy": 95,
-            "Fashion": 97,
-            "Music": 92,
-            "Photography": 95,
-            "Nightlife": 94,
-            "Café Culture": 98
-        },
-        "keywords": ["korean", "streetwear", "techwear", "sci-fi", "thriller", "cafés", "nightlife", "k-pop", "photography", "modern", "design"],
-        "why_template": (
-            "Your taste shows high affinity with {top_signals}. "
-            "Qloo's multi-domain correlation links your enthusiasm for {domain_a} "
-            "with Seoul's explosive visual culture, cinematic storytelling, and boundary-pushing retail architecture. "
-            "Seoul feels like living inside a modern cinematic thriller with incredible 24-hour vitality."
-        ),
-        "neighborhoods": [
-            {
-                "id": "seoul-seongsu",
-                "name": "Seongsu-dong",
-                "vibe": "The Brooklyn of Seoul — Industrial Concept Havens",
-                "compatibility_score": 97,
-                "top_spots": ["Daelim Changgo Gallery", "Haus Dosan / Gentle Monster", "Scene Complex"],
-                "matching_tastes": ["Techwear & Streetwear", "Adaptive Architecture", "Concept Cafés"],
-                "why_it_fits": "Converted red-brick shoe factories transformed into kinetic robotic installations and world-class concept stores."
-            },
-            {
-                "id": "seoul-hongdae",
-                "name": "Hongdae & Yeonnam",
-                "vibe": "Indie Music, Busking & Midnight Salons",
-                "compatibility_score": 92,
-                "top_spots": ["Club FF", "Yeonnam-dong Gyeongui Line Forest", "Anthracite Coffee"],
-                "matching_tastes": ["Indie Sound", "Nightlife", "Street Food"],
-                "why_it_fits": "Youthful artistic epicenter with energetic underground music venues and quiet alleyway wine nooks."
-            },
-            {
-                "id": "seoul-hannam",
-                "name": "Hannam-dong",
-                "vibe": "Curated Luxury, Vinyl Libraries & Contemporary Art",
-                "compatibility_score": 94,
-                "top_spots": ["Hyundai Card Music Library", "Leeum Museum of Art", "Anthracite Hannam"],
-                "matching_tastes": ["Audiophile Listening", "Architecture", "Luxury Minimalist"],
-                "why_it_fits": "Hillside precinct hosting one of the world's greatest vinyl libraries and Rem Koolhaas / Mario Botta architecture."
-            }
-        ],
-        "best_season": "Autumn (September–November) or Spring (April–May)",
-        "estimated_daily_budget_inr": 7800
     },
     {
         "id": "london",
         "name": "London",
         "country": "United Kingdom",
+        "region": "Western Europe",
         "tagline": "The Polyphonic Capital of Heritage, Subculture & Global Dialogue",
         "image_url": "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?auto=format&fit=crop&w=1200&q=80",
         "editorial_summary": "Brutalist estates juxtaposed against Georgian streets, vibrant independent music legacies, and boundary-pushing international art.",
         "base_scores": {
-            "Architecture": 94,
-            "Cinema": 92,
-            "Gastronomy": 90,
-            "Fashion": 92,
-            "Music": 96,
-            "Photography": 93,
-            "Nightlife": 90,
-            "Café Culture": 88
+            "Architecture": 94, "Cinema": 92, "Gastronomy": 90, "Fashion": 92,
+            "Music": 96, "Photography": 93, "Nightlife": 90, "Café Culture": 88
         },
-        "keywords": ["indie", "rock", "architecture", "brutalist", "photography", "books", "art", "nolan", "vintage", "craft", "pubs"],
-        "why_template": (
-            "Your cultural DNA reveals strong affinities with {top_signals}. "
-            "Through Qloo's taste graph, your interest in {domain_a} forms deep connections with London's "
-            "independent publishing culture, historic brutalist landmarks, and avant-garde music foundations. "
-            "London offers an unmatched intellectual and subcultural depth across its distinct boroughs."
-        ),
+        "keywords": ["london", "indie", "rock", "architecture", "brutalist", "photography", "books", "art", "nolan", "vintage", "craft", "pubs", "contemporary art"],
         "neighborhoods": [
-            {
-                "id": "london-shoreditch",
-                "name": "Shoreditch & Hackney",
-                "vibe": "Post-Industrial Art & Subcultural Nightlife",
-                "compatibility_score": 94,
-                "top_spots": ["Rough Trade East", "Village Underground", "Columbia Road Flower Market"],
-                "matching_tastes": ["Indie Rock", "Streetwear", "Art Photography"],
-                "why_it_fits": "Converted railway viaducts and warehouses hosting independent vinyl hubs and cutting-edge sound."
-            },
             {
                 "id": "london-barbican",
                 "name": "Barbican & Clerkenwell",
@@ -227,17 +278,337 @@ CITIES_DATABASE: List[Dict[str, Any]] = [
                 "top_spots": ["Barbican Arts Centre", "St. John Restaurant", "MagCulture"],
                 "matching_tastes": ["Brutalist Architecture", "Cinema", "Design Publications"],
                 "why_it_fits": "Iconic residential concrete complex with tranquil elevated walkways, cinemas, and tropical conservatory."
+            },
+            {
+                "id": "london-shoreditch",
+                "name": "Shoreditch & Hackney",
+                "vibe": "Post-Industrial Art & Subcultural Nightlife",
+                "compatibility_score": 94,
+                "top_spots": ["Rough Trade East", "Village Underground", "Columbia Road"],
+                "matching_tastes": ["Indie Rock", "Streetwear", "Art Photography"],
+                "why_it_fits": "Converted railway viaducts and warehouses hosting independent vinyl hubs and cutting-edge sound."
             }
         ],
         "best_season": "May through September",
         "estimated_daily_budget_inr": 9200
+    },
+    {
+        "id": "amsterdam",
+        "name": "Amsterdam",
+        "country": "Netherlands",
+        "region": "Western Europe",
+        "tagline": "Canal Modernism, Electronic Pioneers & Intimate Gallery Life",
+        "image_url": "https://images.unsplash.com/photo-1512470876302-972faa2aa9a4?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Centuries of maritime canal architecture housing innovative Dutch design studios, electronic music institutions, and progressive social culture.",
+        "base_scores": {
+            "Architecture": 95, "Cinema": 87, "Gastronomy": 88, "Fashion": 90,
+            "Music": 95, "Photography": 94, "Nightlife": 93, "Café Culture": 94
+        },
+        "keywords": ["amsterdam", "netherlands", "dutch design", "canals", "electronic music", "techno", "indie", "contemporary art", "cycling", "cafes", "architecture"],
+        "neighborhoods": [
+            {
+                "id": "ams-jordaan",
+                "name": "Jordaan & De Pijp",
+                "vibe": "Canal Ateliers & Modern Third-Wave Culture",
+                "compatibility_score": 95,
+                "top_spots": ["Rush Hour Records", "FOAM Photography Museum", "Toki Coffee"],
+                "matching_tastes": ["Vinyl Culture", "Photography", "Specialty Coffee"],
+                "why_it_fits": "Pre-eminent electronic vinyl distribution hub alongside world-class contemporary photography spaces."
+            }
+        ],
+        "best_season": "April to October",
+        "estimated_daily_budget_inr": 8500
+    },
+
+    # Latin America
+    {
+        "id": "mexico_city",
+        "name": "Mexico City",
+        "country": "Mexico",
+        "region": "Latin America",
+        "tagline": "The Kinetic Colossus of Modernist Concrete, Street Gastronomy & Surrealist Soul",
+        "image_url": "https://images.unsplash.com/photo-1518638150340-f706e86654de?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Luis Barragán's sublime light and color, sizzling midnight taco stalls, vibrant contemporary art biennials, and intoxicating neighborhood energy.",
+        "base_scores": {
+            "Architecture": 96, "Cinema": 93, "Gastronomy": 99, "Fashion": 88,
+            "Music": 94, "Photography": 96, "Nightlife": 97, "Café Culture": 93
+        },
+        "keywords": ["latin", "mexico", "mexico city", "street food", "tacos", "barragan", "architecture", "nightlife", "social", "football", "contemporary art", "mezcal", "vibrant"],
+        "neighborhoods": [
+            {
+                "id": "cdmx-roma-condesa",
+                "name": "Roma Norte & Condesa",
+                "vibe": "Art Deco Greenery, Mezcalerias & Creative Bistros",
+                "compatibility_score": 98,
+                "top_spots": ["Casa Luis Barragán", "Contramar", "Café de Nadie (Hi-Fi Listening Bar)"],
+                "matching_tastes": ["Hi-Fi Sound", "Gastronomy", "Modernist Architecture"],
+                "why_it_fits": "Lush tree-canopied avenues dotted with audiophile cocktail dens and Pritzker-winning modernist architectural shrines."
+            },
+            {
+                "id": "cdmx-coyoacan",
+                "name": "Coyoacán & San Ángel",
+                "vibe": "Bohemian Cobblestone & Surrealist Courtyards",
+                "compatibility_score": 94,
+                "top_spots": ["Museo Frida Kahlo", "Mercado de Coyoacán", "Centro Cultural Elena Garro"],
+                "matching_tastes": ["Surrealist Art", "Street Food", "Historic Architecture"],
+                "why_it_fits": "Quiet cobblestone quarters infused with revolutionary art history and courtyard coffee sanctums."
+            }
+        ],
+        "best_season": "October to April",
+        "estimated_daily_budget_inr": 5500
+    },
+    {
+        "id": "buenos_aires",
+        "name": "Buenos Aires",
+        "country": "Argentina",
+        "region": "Latin America",
+        "tagline": "The Melancholic Paris of the South: Late-Night Tango, Football Passion & Midnight Literary Salons",
+        "image_url": "https://images.unsplash.com/photo-1589909202802-8f4aadce1849?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Beaux-Arts avenues, world-class historic theaters, late-night parrilla steakhouses, football fever, and subterranean literary bookshops open past midnight.",
+        "base_scores": {
+            "Architecture": 94, "Cinema": 91, "Gastronomy": 95, "Fashion": 89,
+            "Music": 95, "Photography": 93, "Nightlife": 98, "Café Culture": 96
+        },
+        "keywords": ["buenos aires", "argentina", "latin", "football", "nightlife", "street food", "parrilla", "tango", "literature", "architecture", "social", "wine", "midnight"],
+        "neighborhoods": [
+            {
+                "id": "ba-palermo-soho",
+                "name": "Palermo Soho & Hollywood",
+                "vibe": "Cobblestone Street Art, Independent Boutiques & Parrillas",
+                "compatibility_score": 96,
+                "top_spots": ["Don Julio Parrilla", "El Ateneo Grand Splendid (Theater Bookshop)", "LAB Tostadores de Café"],
+                "matching_tastes": ["Artisan Gastronomy", "Literary Heritage", "Nightlife"],
+                "why_it_fits": "Vibrant design enclave where social dining extends until 2 AM alongside world-famous architectural bookstores."
+            },
+            {
+                "id": "ba-san-telmo",
+                "name": "San Telmo",
+                "vibe": "Bohemian Antiques, Street Tango & Historic Bodegones",
+                "compatibility_score": 93,
+                "top_spots": ["Mercado de San Telmo", "Plaza Dorrego", "Bar Británico"],
+                "matching_tastes": ["Vintage Antiques", "Street Music", "Historic Culture"],
+                "why_it_fits": "Oldest barrio of Buenos Aires with cobblestone streets, antique markets, and passionate street performers."
+            }
+        ],
+        "best_season": "October to December (Spring) or March to May",
+        "estimated_daily_budget_inr": 5000
+    },
+    {
+        "id": "sao_paulo",
+        "name": "São Paulo",
+        "country": "Brazil",
+        "region": "Latin America",
+        "tagline": "The Brutalist Megacity of Tropical Modernism, Gastronomy & Underground Sound",
+        "image_url": "https://images.unsplash.com/photo-1578637387939-43c525550085?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Lina Bo Bardi's suspended glass museums, Paulo Mendes da Rocha concrete forms, electrifying Brazilian rhythms, and South America's greatest culinary stage.",
+        "base_scores": {
+            "Architecture": 96, "Cinema": 89, "Gastronomy": 97, "Fashion": 91,
+            "Music": 97, "Photography": 94, "Nightlife": 98, "Café Culture": 91
+        },
+        "keywords": ["brazil", "sao paulo", "tropical", "brutalist", "architecture", "music", "latin", "nightlife", "street food", "contemporary art", "football", "coffee"],
+        "neighborhoods": [
+            {
+                "id": "sp-pinheiros",
+                "name": "Pinheiros & Vila Madalena",
+                "vibe": "Street Murals, Independent Ateliers & Samba Bars",
+                "compatibility_score": 96,
+                "top_spots": ["MASP (Lina Bo Bardi Architecture)", "Beco do Batman", "Coffee Lab"],
+                "matching_tastes": ["Modern Architecture", "Street Murals", "Specialty Coffee"],
+                "why_it_fits": "Epicenter of Brazilian contemporary design, experimental coffee roasting, and endless weekend music circles."
+            }
+        ],
+        "best_season": "April to October",
+        "estimated_daily_budget_inr": 5800
+    },
+
+    # South Asia
+    {
+        "id": "mumbai",
+        "name": "Mumbai",
+        "country": "India",
+        "region": "South Asia",
+        "tagline": "The High-Velocity Crucible of Cinema, Art Deco Heritage & Coastal Vitality",
+        "image_url": "https://images.unsplash.com/photo-1570168007204-dfb528c6958f?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "The world's second-largest collection of Art Deco architecture, the pulsating nerve center of Indian cinema, coastal street cuisine, and fearless modern design.",
+        "base_scores": {
+            "Architecture": 93, "Cinema": 99, "Gastronomy": 98, "Fashion": 94,
+            "Music": 93, "Photography": 95, "Nightlife": 92, "Café Culture": 92
+        },
+        "keywords": ["indian", "mumbai", "bollywood", "cinema", "south asian", "street food", "architecture", "art deco", "fashion", "heritage", "coastal", "contemporary art", "creative"],
+        "neighborhoods": [
+            {
+                "id": "mumbai-kala-ghoda",
+                "name": "Kala Ghoda & Fort",
+                "vibe": "Victorian & Art Deco Galleries, Indie Cafes & Designers",
+                "compatibility_score": 97,
+                "top_spots": ["Jehangir Art Gallery", "Kala Ghoda Cafe", "Subko Specialty Coffee & Bakehouse"],
+                "matching_tastes": ["Contemporary Indian Art", "Art Deco Heritage", "Single-Origin Coffee"],
+                "why_it_fits": "Historic crescent celebrated for India's finest independent art spaces, curated fashion boutiques, and specialty roasteries."
+            },
+            {
+                "id": "mumbai-bandra",
+                "name": "Bandra West (Pali Hill & Ranwar)",
+                "vibe": "Portuguese Heritage Villages, Creative Studios & Night Lounges",
+                "compatibility_score": 95,
+                "top_spots": ["Ranwar Village Street Murals", "The Bombay Canteen", "Toto's Garage"],
+                "matching_tastes": ["Independent Cinema", "Subcultural Style", "Regional Gastronomy"],
+                "why_it_fits": "Bustling creative quarter where directors, fashion designers, and musicians gather in village lanes."
+            }
+        ],
+        "best_season": "November to February",
+        "estimated_daily_budget_inr": 4800
+    },
+    {
+        "id": "delhi",
+        "name": "Delhi",
+        "country": "India",
+        "region": "South Asia",
+        "tagline": "The Monumental Palimpsest of Ancient Empires, Brutalist Modernism & Craft Heritage",
+        "image_url": "https://images.unsplash.com/photo-1587474260584-136574528ed5?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Mughal red sandstone tombs juxtaposed against Raj Rewal brutalism, fragrant culinary alleys of Old Delhi, and elite textile ateliers.",
+        "base_scores": {
+            "Architecture": 97, "Cinema": 90, "Gastronomy": 98, "Fashion": 95,
+            "Music": 89, "Photography": 96, "Nightlife": 85, "Café Culture": 91
+        },
+        "keywords": ["delhi", "indian", "heritage", "mughal", "traditional architecture", "textiles", "fashion", "craft", "street food", "culture", "books"],
+        "neighborhoods": [
+            {
+                "id": "delhi-hauz-khas",
+                "name": "Hauz Khas Village & Shahpur Jat",
+                "vibe": "Medieval Ruins, Indie Fashion Ateliers & Rooftops",
+                "compatibility_score": 94,
+                "top_spots": ["Hauz Khas Fort Complex", "Blue Tokai Coffee Roasters", "Ogaan Designer Ateliers"],
+                "matching_tastes": ["Textile Design", "Historic Heritage", "Indie Designers"],
+                "why_it_fits": "14th-century madrasa ruins overlooking a lake, bordered by experimental apparel workshops and cafes."
+            }
+        ],
+        "best_season": "October to March",
+        "estimated_daily_budget_inr": 4500
+    },
+
+    # Southern Europe & Mediterranean
+    {
+        "id": "barcelona",
+        "name": "Barcelona",
+        "country": "Spain",
+        "region": "Southern Europe",
+        "tagline": "The Sun-Drenched Canvas of Modernisme, Electronic Vanguard & Mediterranean Life",
+        "image_url": "https://images.unsplash.com/photo-1583422409516-2895a77efded?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Gaudí's organic curves, Sónar electronic music innovation, Catalan vermouth bars, and coastal architecture that celebrates public life.",
+        "base_scores": {
+            "Architecture": 99, "Cinema": 90, "Gastronomy": 96, "Fashion": 91,
+            "Music": 97, "Photography": 96, "Nightlife": 97, "Café Culture": 93
+        },
+        "keywords": ["barcelona", "spain", "gaudi", "architecture", "electronic music", "sonar", "street food", "tapas", "nightlife", "photography", "social", "mediterranean"],
+        "neighborhoods": [
+            {
+                "id": "bcn-born",
+                "name": "El Born & Poblenou",
+                "vibe": "Gothic Stone, Industrial Lofts & Electronic Spaces",
+                "compatibility_score": 97,
+                "top_spots": ["MACBA Contemporary Art", "Razzmatazz & Nitsa Club", "Nomad Coffee Lab"],
+                "matching_tastes": ["Electronic Music", "Specialty Coffee", "Avant-Garde Architecture"],
+                "why_it_fits": "Converted 19th-century textile mills housing graphic studios, craft coffee bars, and iconic electronic venues."
+            }
+        ],
+        "best_season": "May to June or September to October",
+        "estimated_daily_budget_inr": 7800
+    },
+    {
+        "id": "lisbon",
+        "name": "Lisbon",
+        "country": "Portugal",
+        "region": "Southern Europe",
+        "tagline": "The Golden Coastal Haven of Azulejo Tiles, Fado Resonance & Atlantic Light",
+        "image_url": "https://images.unsplash.com/photo-1509840841025-9088ba78a826?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Sun-bleached pastel facades, acoustic fado taverns, ceramic tile traditions, emerging tech and natural wine enclaves perched on seven hills.",
+        "base_scores": {
+            "Architecture": 95, "Cinema": 88, "Gastronomy": 94, "Fashion": 88,
+            "Music": 94, "Photography": 98, "Nightlife": 93, "Café Culture": 95
+        },
+        "keywords": ["lisbon", "portugal", "atlantic", "architecture", "tiles", "fado", "music", "wine", "slow living", "photography", "light", "indie"],
+        "neighborhoods": [
+            {
+                "id": "lisbon-principe-real",
+                "name": "Príncipe Real & Santos",
+                "vibe": "19th-Century Mansions, Concept Stores & Natural Wine",
+                "compatibility_score": 96,
+                "top_spots": ["Embaixada Concept Gallery", "Bettencourt Specialty Coffee", "Miradouro de São Pedro de Alcântara"],
+                "matching_tastes": ["Craft Ceramics", "Viewpoint Photography", "Independent Boutiques"],
+                "why_it_fits": "Hilltop enclave of neo-Moorish palaces converted into artisan design houses and botanical gardens."
+            }
+        ],
+        "best_season": "April to June or September to October",
+        "estimated_daily_budget_inr": 6800
+    },
+
+    # Africa & Middle East
+    {
+        "id": "marrakech",
+        "name": "Marrakech",
+        "country": "Morocco",
+        "region": "North Africa",
+        "tagline": "The Ochre Sanctuary of Yves Saint Laurent, Riads & Labyrinthine Sensory Craft",
+        "image_url": "https://images.unsplash.com/photo-1597212618440-806262de4f6b?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Terracotta ramparts enclosing secret tiled riad gardens, Yves Saint Laurent's visual legacy, brass craft ateliers, and spice-laden alleyways.",
+        "base_scores": {
+            "Architecture": 98, "Cinema": 87, "Gastronomy": 95, "Fashion": 96,
+            "Music": 90, "Photography": 98, "Nightlife": 82, "Café Culture": 94
+        },
+        "keywords": ["morocco", "marrakech", "craft", "fashion", "architecture", "textiles", "saint laurent", "photography", "spices", "traditional", "design", "riads"],
+        "neighborhoods": [
+            {
+                "id": "marrak-gueliz",
+                "name": "Guéliz & Majorelle",
+                "vibe": "Art Deco Francophone Boulevards & Haute Design",
+                "compatibility_score": 96,
+                "top_spots": ["Musée Yves Saint Laurent", "Jardin Majorelle", "33 Rue Majorelle"],
+                "matching_tastes": ["Haute Fashion", "Botanical Architecture", "Modernist Design"],
+                "why_it_fits": "Refined quarter created around Saint Laurent's iconic visual sanctuary and avant-garde Moroccan designers."
+            }
+        ],
+        "best_season": "October to April",
+        "estimated_daily_budget_inr": 5500
+    },
+
+    # Oceania
+    {
+        "id": "melbourne",
+        "name": "Melbourne",
+        "country": "Australia",
+        "region": "Oceania",
+        "tagline": "The Laneway Capital of Specialty Coffee, Street Art & Independent Sound",
+        "image_url": "https://images.unsplash.com/photo-1514395462725-fb4566210144?auto=format&fit=crop&w=1200&q=80",
+        "editorial_summary": "Bluestone laneways smelling of Ethiopian pour-overs, secret basement jazz bars, world-class independent galleries, and live indie music.",
+        "base_scores": {
+            "Architecture": 91, "Cinema": 88, "Gastronomy": 96, "Fashion": 90,
+            "Music": 95, "Photography": 93, "Nightlife": 94, "Café Culture": 99
+        },
+        "keywords": ["melbourne", "australia", "coffee", "laneways", "street art", "music", "indie", "cafes", "architecture", "craft", "books", "contemporary art"],
+        "neighborhoods": [
+            {
+                "id": "melb-fitzroy",
+                "name": "Fitzroy & Collingwood",
+                "vibe": "Victorian Terraces, Vinyl Sanctums & Third-Wave Pioneers",
+                "compatibility_score": 97,
+                "top_spots": ["Seven Seeds Specialty Coffee", "Searchers Books & Records", "Centre for Contemporary Photography"],
+                "matching_tastes": ["World-Class Coffee", "Independent Books", "Contemporary Photography"],
+                "why_it_fits": "The world's undisputed specialty coffee capital, brimming with converted brick warehouses and indie press curators."
+            }
+        ],
+        "best_season": "October to April",
+        "estimated_daily_budget_inr": 8200
     }
 ]
 
+# Quick lookup by ID
+CITIES_DATABASE = GLOBAL_CULTURAL_ATLAS
+
 class CulturalEngine:
     """
-    Computes Cultural DNA, evaluates CitySoul Cultural Compatibility,
-    generates connected taste graphs, and crafts personalized multi-day itineraries.
+    Cultural Intelligence Engine for CitySoul.
+    Calculates 8-pillar Cultural DNA, evaluates CitySoul Cultural Compatibility,
+    performs dynamic global candidate discovery, and crafts personalized multi-day itineraries.
     """
 
     @staticmethod
@@ -259,10 +630,10 @@ class CulturalEngine:
         # Architecture & Design
         arch_score = 65
         arch_traits = []
-        if any(w in all_text for w in ["architecture", "brutalist", "minimalist", "design", "kengo kuma", "modernist", "bauhaus"]):
-            arch_score += 26
-            arch_traits.extend(["Brutalist & Modernist Form", "Spatial Harmony"])
-        if any(w in all_text for w in ["photography", "urban", "sculptural"]):
+        if any(w in all_text for w in ["architecture", "brutalist", "minimalist", "design", "kengo kuma", "modernist", "bauhaus", "barragan", "gaudi", "nordic"]):
+            arch_score += 28
+            arch_traits.extend(["Monolithic & Modernist Form", "Spatial Harmony"])
+        if any(w in all_text for w in ["photography", "urban", "sculptural", "concrete", "zen", "temples"]):
             arch_score += 5
             arch_traits.append("Urban Geometries")
         if not arch_traits:
@@ -271,8 +642,8 @@ class CulturalEngine:
         # Cinema & Narrative
         cinema_score = 60
         cinema_traits = []
-        if any(w in all_text for w in ["nolan", "sci-fi", "cyberpunk", "thriller", "director", "cinema", "indie", "blade runner"]):
-            cinema_score += 33
+        if any(w in all_text for w in ["nolan", "sci-fi", "cyberpunk", "thriller", "director", "cinema", "indie", "blade runner", "auteur", "edward yang", "wong kar-wai", "bollywood", "cinema"]):
+            cinema_score += 34
             cinema_traits.extend(["Atmospheric World-Building", "Complex Narrative"])
         else:
             cinema_traits = ["Visual Storytelling", "Cinematic Moods"]
@@ -280,8 +651,8 @@ class CulturalEngine:
         # Gastronomy & Food Craft
         food_score = 65
         food_traits = []
-        if any(w in all_text for w in ["japanese", "korean", "ramen", "street food", "omakase", "fermentation", "dining"]):
-            food_score += 28
+        if any(w in all_text for w in ["japanese", "korean", "ramen", "street food", "omakase", "tacos", "tapas", "south asian", "parrilla", "fermentation", "dining"]):
+            food_score += 30
             food_traits.extend(["Artisanal Craftsmanship", "Hyper-Localized Flavor"])
         else:
             food_traits = ["Cultural Palates", "Experiential Dining"]
@@ -289,8 +660,8 @@ class CulturalEngine:
         # Fashion & Subculture
         fashion_score = 60
         fashion_traits = []
-        if any(w in all_text for w in ["streetwear", "minimalist", "techwear", "vintage", "avant-garde", "monochrome"]):
-            fashion_score += 32
+        if any(w in all_text for w in ["streetwear", "minimalist", "techwear", "vintage", "avant-garde", "monochrome", "textiles", "couture", "denim"]):
+            fashion_score += 33
             fashion_traits.extend(["Silhouette Innovation", "Subcultural Codes"])
         else:
             fashion_traits = ["Personal Expression", "Contemporary Styling"]
@@ -298,17 +669,17 @@ class CulturalEngine:
         # Music & Soundscapes
         music_score = 65
         music_traits = []
-        if any(w in all_text for w in ["techno", "indie", "electronic", "vinyl", "jazz", "underground", "bass"]):
-            music_score += 29
-            music_traits.extend(["Underground Electronic", "Analog Vinyl Reverence"])
+        if any(w in all_text for w in ["techno", "indie", "electronic", "vinyl", "jazz", "underground", "ambient", "sigur ros", "latin", "samba", "fado", "bass"]):
+            music_score += 31
+            music_traits.extend(["Underground Sound", "Analog Vinyl Reverence"])
         else:
             music_traits = ["Eclectic Selection", "Acoustic Depth"]
 
         # Nightlife & Urban Energy
         night_score = 60
         night_traits = []
-        if any(w in all_text for w in ["nightlife", "late-night", "club", "speakeasy", "bar", "underground"]):
-            night_score += 28
+        if any(w in all_text for w in ["nightlife", "late-night", "club", "speakeasy", "bar", "social", "football", "mezcal", "after-hours"]):
+            night_score += 32
             night_traits.extend(["Subterranean Haunts", "After-Hours Vitality"])
         else:
             night_traits = ["Evening Social Spaces", "Atmospheric Lounges"]
@@ -316,8 +687,8 @@ class CulturalEngine:
         # Photography & Visual Culture
         photo_score = 65
         photo_traits = []
-        if any(w in all_text for w in ["photography", "street photography", "visual", "art", "film camera", "galleries"]):
-            photo_score += 29
+        if any(w in all_text for w in ["photography", "street photography", "visual", "art", "film camera", "galleries", "light", "shadow"]):
+            photo_score += 30
             photo_traits.extend(["Street Geometry", "Light & Texture Capture"])
         else:
             photo_traits = ["Visual Perception", "Documentary Eye"]
@@ -325,8 +696,8 @@ class CulturalEngine:
         # Café Culture & Third Spaces
         cafe_score = 65
         cafe_traits = []
-        if any(w in all_text for w in ["café", "cafe", "coffee", "roastery", "quiet", "books", "reading"]):
-            cafe_score += 27
+        if any(w in all_text for w in ["café", "cafe", "coffee", "roastery", "quiet", "books", "reading", "tea", "slow", "solitude"]):
+            cafe_score += 30
             cafe_traits.extend(["Third-Wave Precision", "Contemplative Retreats"])
         else:
             cafe_traits = ["Slow Coffee Rituals", "Urban Sanctuaries"]
@@ -336,19 +707,19 @@ class CulturalEngine:
                 category="Cinema & Visual Narrative",
                 score=min(cinema_score, 98),
                 dominant_traits=cinema_traits[:2],
-                description="High affinity for cinematic world-building, dramatic lighting, and neo-noir themes."
+                description="High affinity for cinematic world-building, dramatic lighting, and deep auteur narratives."
             ),
             CulturalDNASignal(
                 category="Architecture & Spatial Form",
-                score=min(arch_score, 97),
+                score=min(arch_score, 98),
                 dominant_traits=arch_traits[:2],
-                description="Gravitation towards monolithic structures, brutalist heritage, and minimalist proportions."
+                description="Gravitation towards monolithic structures, brutalist/modernist heritage, and spatial proportion."
             ),
             CulturalDNASignal(
                 category="Gastronomy & Culinary Craft",
-                score=min(food_score, 96),
+                score=min(food_score, 98),
                 dominant_traits=food_traits[:2],
-                description="Deep appreciation for hyper-regional ingredients, omakase precision, and street stall culture."
+                description="Deep appreciation for hyper-regional ingredients, street stall culture, and culinary devotion."
             ),
             CulturalDNASignal(
                 category="Fashion & Subcultural Style",
@@ -358,40 +729,41 @@ class CulturalEngine:
             ),
             CulturalDNASignal(
                 category="Music & Sound Explorations",
-                score=min(music_score, 98),
+                score=min(music_score, 99),
                 dominant_traits=music_traits[:2],
                 description="Focus on underground electronic textures, deep listening spaces, and independent vinyl."
             ),
             CulturalDNASignal(
                 category="Photography & Visual Rhythm",
-                score=min(photo_score, 96),
+                score=min(photo_score, 97),
                 dominant_traits=photo_traits[:2],
                 description="Visual hunter seeking high-contrast architectural angles, neon reflections, and quiet alleys."
             ),
             CulturalDNASignal(
                 category="Café Culture & Third Spaces",
-                score=min(cafe_score, 95),
+                score=min(cafe_score, 98),
                 dominant_traits=cafe_traits[:2],
                 description="Love for architect-designed roasteries, quiet book nooks, and intentional community hubs."
             ),
             CulturalDNASignal(
                 category="Nightlife & Subterranean Pulse",
-                score=min(night_score, 96),
+                score=min(night_score, 98),
                 dominant_traits=night_traits[:2],
-                description="Appreciation for discreet speakeasies, audiophile jazz kissas, and industrial warehouses."
+                description="Appreciation for discreet speakeasies, audiophile listening kissas, and energetic night rhythms."
             ),
         ]
 
-        # Sort signals by highest score
         return sorted(signals, key=lambda s: s.score, reverse=True)
 
     @classmethod
     async def match_cities(cls, taste: TasteInput, dna: List[CulturalDNASignal]) -> List[CityMatch]:
         """
-        Ranks candidate cities using CitySoul's multi-layered scoring:
-        - Domain vector alignment
-        - Qloo cross-domain evidence strength
-        - User keyword/free-text resonance
+        Ranks candidate cities dynamically across global regions using:
+        1. Live Qloo candidate place discovery conditioned on user seeds
+        2. Qloo cross-domain affinities and place density for each candidate
+        3. Multidimensional Cultural DNA vector alignment
+        4. Budget fit & keyword/aesthetic resonance
+        NO FOUR-CITY OR FOUR-COUNTRY LIMITATION.
         """
         user_interests = {
             "music": taste.music,
@@ -411,26 +783,38 @@ class CulturalEngine:
             taste.free_text or ""
         ]).lower()
 
-        matched_cities: List[CityMatch] = []
+        # Step 1: Collect seed strings for Qloo entity resolution
+        seeds_with_domains: List[Tuple[str, str]] = []
+        for domain, items in user_interests.items():
+            for item in items:
+                if item and item.strip():
+                    seeds_with_domains.append((item.strip(), domain.title()))
 
-        for city in CITIES_DATABASE:
-            city_id = city["id"]
-            city_name = city["name"]
+        # Also extract potential named seeds from free_text
+        if taste.free_text:
+            text_seeds = [w.strip() for w in taste.free_text.replace(",", ".").split(".") if len(w.strip()) > 3]
+            for ts in text_seeds[:2]:
+                seeds_with_domains.append((ts, "Vibe"))
 
-            # 1. Fetch genuine Qloo cross-domain affinities
-            qloo_evidence = await qloo_service.get_cross_domain_affinities(user_interests, city_name)
+        primary_seeds = seeds_with_domains[:5]
+        resolved_entities: List[Tuple[QlooEntity, str]] = []
+        for seed_name, dom_name in primary_seeds:
+            try:
+                ents = await qloo_service.search_entity(seed_name)
+                if ents:
+                    resolved_entities.append((ents[0], dom_name))
+            except Exception:
+                pass
 
-            # 2. Compute explainable compatibility score
-            # Base match on keyword resonance
-            keyword_matches = sum(1 for kw in city["keywords"] if kw in all_text)
-            kw_factor = min(keyword_matches * 3.5, 25.0)
+        resolved_ids = [e.entity_id for e, _ in resolved_entities if e.entity_id]
 
-            # Average Qloo affinity strength
-            qloo_strength = sum(e.qloo_affinity_strength for e in qloo_evidence) / max(len(qloo_evidence), 1)
-            qloo_factor = qloo_strength * 40.0
+        # Step 2: Global candidate generation
+        # Calculate pre-scores for all cities in the global atlas based on DNA and keywords
+        dna_dict = {d.category.split(" ")[0]: d.score for d in dna}
+        candidate_scores: List[Tuple[Dict[str, Any], float]] = []
 
-            # DNA domain alignment
-            dna_dict = {d.category.split(" ")[0]: d.score for d in dna}
+        for city in GLOBAL_CULTURAL_ATLAS:
+            # Domain vector alignment
             base_city_scores = city["base_scores"]
             alignment_acc = 0.0
             align_count = 0
@@ -439,17 +823,104 @@ class CulturalEngine:
                     if k.lower() in dna_k.lower() or dna_k.lower() in k.lower():
                         alignment_acc += (100 - abs(val - dna_val))
                         align_count += 1
-            domain_factor = (alignment_acc / max(align_count, 1)) * 0.35
+            domain_alignment = alignment_acc / max(align_count, 1)
 
-            raw_score = int(kw_factor + qloo_factor + domain_factor)
-            final_score = max(min(raw_score, 97), 78)
+            # Keyword and aesthetic resonance
+            kw_matches = sum(1 for kw in city["keywords"] if kw in all_text)
+            kw_score = min(kw_matches * 6.0, 30.0)
 
-            # High signal top 3
-            top_3_signals = ", ".join([d.category.split("&")[0].strip() for d in dna[:3]])
-            why_narrative = city["why_template"].format(
-                top_signals=top_3_signals,
-                domain_a=dna[0].category.split("&")[0].strip(),
-                domain_b=dna[1].category.split("&")[0].strip()
+            # Budget factor (penalize slightly if budget is very tight for high-cost city)
+            budget_fit = 10.0
+            if taste.budget and taste.budget > 0:
+                daily_budget = taste.budget / max(taste.duration_days or 5, 1)
+                est_daily = city.get("estimated_daily_budget_inr", 7000)
+                if daily_budget < est_daily * 0.7:
+                    budget_fit = 5.0
+                elif daily_budget >= est_daily:
+                    budget_fit = 10.0
+
+            pre_score = (domain_alignment * 0.6) + kw_score + budget_fit
+            candidate_scores.append((city, pre_score))
+
+        # Sort candidate atlas cities by pre-score
+        candidate_scores.sort(key=lambda x: x[1], reverse=True)
+        top_candidates = [c for c, _ in candidate_scores[:5]]
+
+        # Step 3: Query live Qloo cross-domain affinities concurrently for top candidates
+        affinities_results = await asyncio.gather(*[
+            qloo_service.get_cross_domain_affinities(
+                user_interests=user_interests,
+                target_city=city["name"],
+                resolved_entities=resolved_entities
+            )
+            for city in top_candidates
+        ], return_exceptions=True)
+
+        matched_cities: List[CityMatch] = []
+
+        for idx, city in enumerate(top_candidates):
+            city_id = city["id"]
+            city_name = city["name"]
+
+            # Retrieve parallel Qloo evidence result
+            raw_ev = affinities_results[idx]
+            qloo_evidence = raw_ev if isinstance(raw_ev, list) else []
+
+            # Calculate CitySoul Compatibility Score (0 to 100)
+            # Component 1: Qloo evidence strength (40% weight)
+            qloo_strength = sum(e.qloo_affinity_strength for e in qloo_evidence) / max(len(qloo_evidence), 1)
+            qloo_component = qloo_strength * 40.0
+
+            # Component 2: Cultural DNA domain alignment (35% weight)
+            base_city_scores = city["base_scores"]
+            alignment_acc = 0.0
+            align_count = 0
+            for k, val in base_city_scores.items():
+                for dna_k, dna_val in dna_dict.items():
+                    if k.lower() in dna_k.lower() or dna_k.lower() in k.lower():
+                        alignment_acc += (100 - abs(val - dna_val))
+                        align_count += 1
+            domain_alignment = alignment_acc / max(align_count, 1)
+            domain_component = (domain_alignment / 100.0) * 35.0
+
+            # Component 3: Keyword / taste resonance (15% weight)
+            kw_matches = sum(1 for kw in city["keywords"] if kw in all_text)
+            kw_component = min(kw_matches * 3.5, 15.0)
+
+            # Component 4: Budget & practical fit (10% weight)
+            budget_component = 9.0
+            if taste.budget and taste.budget > 0:
+                daily_budget = taste.budget / max(taste.duration_days or 5, 1)
+                est_daily = city.get("estimated_daily_budget_inr", 7000)
+                if daily_budget >= est_daily:
+                    budget_component = 10.0
+                elif daily_budget >= est_daily * 0.7:
+                    budget_component = 8.0
+                else:
+                    budget_component = 6.0
+
+            raw_score = int(round(qloo_component + domain_component + kw_component + budget_component))
+            final_compatibility = max(min(raw_score, 98), 75)
+
+            calculation_breakdown = {
+                "qloo_evidence_component": round(qloo_component, 1),
+                "cultural_dna_domain_component": round(domain_component, 1),
+                "taste_resonance_component": round(kw_component, 1),
+                "budget_fit_component": round(budget_component, 1),
+                "total_score": float(final_compatibility)
+            }
+
+            # 3-Layer Explanation
+            top_3_dna = ", ".join([d.category.split("&")[0].strip() for d in dna[:3]])
+            primary_evidence_str = ""
+            if qloo_evidence:
+                ev_items = [f"{ev.source_interest} correlating with {ev.target_affinity} ({int(ev.qloo_affinity_strength*100)}% affinity)" for ev in qloo_evidence[:2]]
+                primary_evidence_str = f" Qloo cultural signals detected strong cross-domain links: {'; '.join(ev_items)}."
+
+            why_narrative = (
+                f"Your cultural profile expresses high resonance with {top_3_dna}.{primary_evidence_str} "
+                f"CitySoul identified {city_name} as a culturally compatible destination because its living creative ecosystem "
+                f"naturally manifests your specific tastes in {dna[0].category.split('&')[0].strip()} and {dna[1].category.split('&')[0].strip()}."
             )
 
             # Cross-domain connection bullets
@@ -458,7 +929,7 @@ class CulturalEngine:
                 for ev in qloo_evidence
             ]
 
-            # Neighborhoods converted to schema
+            # Neighborhoods
             neighborhoods = [
                 NeighborhoodInfo(
                     id=n["id"],
@@ -476,8 +947,9 @@ class CulturalEngine:
                 id=city_id,
                 name=city_name,
                 country=city["country"],
+                region=city.get("region", "Global"),
                 tagline=city["tagline"],
-                compatibility_score=final_score,
+                compatibility_score=final_compatibility,
                 image_url=city["image_url"],
                 editorial_summary=city["editorial_summary"],
                 cultural_signals=city["base_scores"],
@@ -486,7 +958,8 @@ class CulturalEngine:
                 cross_domain_connections=connections,
                 neighborhoods=neighborhoods,
                 best_season=city["best_season"],
-                estimated_daily_budget_inr=city["estimated_daily_budget_inr"]
+                estimated_daily_budget_inr=city["estimated_daily_budget_inr"],
+                calculation_breakdown=calculation_breakdown
             ))
 
         # Sort by compatibility score descending
@@ -496,24 +969,42 @@ class CulturalEngine:
     def generate_taste_graph(taste: TasteInput, top_city: CityMatch) -> TasteConnectionGraph:
         """
         Creates connected nodes showing unexpected cross-domain discoveries
-        bridging User Taste -> Qloo Cultural Signals -> City Soul.
+        bridging User Taste (Tier 1) -> Qloo Cultural Signals (Tier 2) -> Destination Ecosystem (Tier 3).
         """
+        film_label = taste.film[0] if taste.film else "Cinema & Narrative"
+        fashion_label = taste.fashion[0] if taste.fashion else "Aesthetic & Fashion"
+        music_label = taste.music[0] if taste.music else "Sound & Subculture"
+        arch_label = taste.interests[0] if taste.interests else "Architecture & Form"
+
+        qloo_signals = []
+        if top_city.qloo_evidence:
+            for ev in top_city.qloo_evidence[:3]:
+                qloo_signals.append((ev.target_affinity, ev.target_category, ev.qloo_affinity_strength))
+
+        while len(qloo_signals) < 3:
+            default_signals = [
+                (f"{top_city.name} Cultural Densities", "Urban Design", 0.94),
+                (f"{top_city.name} Sound Architecture", "Acoustic Venue", 0.92),
+                (f"{top_city.name} Artisan Ateliers", "Craft & Retail", 0.93)
+            ]
+            qloo_signals.append(default_signals[len(qloo_signals)])
+
         nodes = [
-            TasteConnectionNode(id="n1", label="Christopher Nolan / Sci-Fi", category="Cinema", tier=1),
-            TasteConnectionNode(id="n2", label="Streetwear & Minimalist", category="Fashion", tier=1),
-            TasteConnectionNode(id="n3", label="Underground Techno", category="Music", tier=1),
-            TasteConnectionNode(id="n4", label="Brutalist & Urban Architecture", category="Architecture", tier=1),
-            TasteConnectionNode(id="n5", label="Neo-Futurism & High Density", category="Qloo Signal", tier=2),
-            TasteConnectionNode(id="n6", label="Audiophile Listening Bars", category="Qloo Signal", tier=2),
-            TasteConnectionNode(id="n7", label="Archival Denim & Ura-Harajuku", category="Qloo Signal", tier=2),
+            TasteConnectionNode(id="n1", label=film_label, category="Cinema", tier=1),
+            TasteConnectionNode(id="n2", label=fashion_label, category="Fashion", tier=1),
+            TasteConnectionNode(id="n3", label=music_label, category="Music", tier=1),
+            TasteConnectionNode(id="n4", label=arch_label, category="Architecture", tier=1),
+            TasteConnectionNode(id="n5", label=qloo_signals[0][0], category="Qloo Signal", tier=2),
+            TasteConnectionNode(id="n6", label=qloo_signals[1][0], category="Qloo Signal", tier=2),
+            TasteConnectionNode(id="n7", label=qloo_signals[2][0], category="Qloo Signal", tier=2),
             TasteConnectionNode(id="n8", label=f"{top_city.name} Cultural Ecosystem", category="Destination Match", tier=3),
         ]
 
         edges = [
-            TasteConnectionEdge(source="n1", target="n5", relationship="Informs Aesthetic", affinity_score=0.96),
+            TasteConnectionEdge(source="n1", target="n5", relationship="Informs Aesthetic", affinity_score=qloo_signals[0][2]),
             TasteConnectionEdge(source="n4", target="n5", relationship="Spatial Complement", affinity_score=0.93),
-            TasteConnectionEdge(source="n3", target="n6", relationship="Sonic Acoustic Match", affinity_score=0.94),
-            TasteConnectionEdge(source="n2", target="n7", relationship="Subcultural Lineage", affinity_score=0.95),
+            TasteConnectionEdge(source="n3", target="n6", relationship="Sonic Acoustic Match", affinity_score=qloo_signals[1][2]),
+            TasteConnectionEdge(source="n2", target="n7", relationship="Subcultural Lineage", affinity_score=qloo_signals[2][2]),
             TasteConnectionEdge(source="n5", target="n8", relationship="Urban Anchor", affinity_score=0.97),
             TasteConnectionEdge(source="n6", target="n8", relationship="Nightlife Ecosystem", affinity_score=0.92),
             TasteConnectionEdge(source="n7", target="n8", relationship="Retail Craft Heritage", affinity_score=0.94),
@@ -530,237 +1021,81 @@ class CulturalEngine:
         travel_style: str = "Cultural Immersion & Night Exploration"
     ) -> Itinerary:
         """
-        Constructs a deeply personalized multi-day itinerary based on the user's
-        cultural compatibility and financial constraints.
+        Constructs a personalized multi-day cultural itinerary based on the user's
+        cultural compatibility and financial constraints for ANY city worldwide.
         """
-        daily_allowance = int(budget_inr / max(duration, 1))
+        safe_duration = max(min(duration, 10), 1)
+        daily_allowance = int(budget_inr / safe_duration) if budget_inr > 0 else 7000
 
-        itinerary_days: List[ItineraryDay] = []
-        city_id = city.id.lower()
+        # Extract authentic neighborhoods
+        neighborhood_names = [n.name for n in city.neighborhoods] if city.neighborhoods else [city.name]
 
-        if "tokyo" in city_id:
-            day_plans = [
-                {
-                    "day": 1,
-                    "theme": "Neo-Tokyo Architecture & Cinematic Geometries",
-                    "neighborhood": "Shinjuku & Ginza",
-                    "activities": [
-                        {
-                            "time_slot": "Morning (09:30 - 12:30)",
-                            "title": "Nakagin Capsule Heritage & Ginza Modernist Lines",
-                            "category": "Architecture",
-                            "neighborhood": "Ginza",
-                            "description": "Explore avant-garde Japanese metabolism architecture, visiting Shiseido Parlour and Dover Street Market Ginza.",
-                            "cultural_connection": "Direct link to your appreciation for structural minimalism and high fashion.",
-                            "cost": 1200
-                        },
-                        {
-                            "time_slot": "Afternoon (14:00 - 17:00)",
-                            "title": "Tokyo International Forum & Photography Walk",
-                            "category": "Photography",
-                            "neighborhood": "Marunouchi",
-                            "description": "Capture the breathtaking rib-vault glass atrium designed by Rafael Viñoly, an iconic spot for architectural photographers.",
-                            "cultural_connection": "Matches your high affinity for clean visual composition and monochrome light play.",
-                            "cost": 500
-                        },
-                        {
-                            "time_slot": "Evening (18:30 - 22:30)",
-                            "title": "Blade Runner Noir Walk & Golden Gai Micro-Bars",
-                            "category": "Cinema & Nightlife",
-                            "neighborhood": "Shinjuku",
-                            "description": "Navigate neon-drenched alleys of Omoide Yokocho for yakitori, then slip into a 6-seat jazz bar in Golden Gai.",
-                            "cultural_connection": "Echoes Christopher Nolan's neo-noir inspirations and atmospheric night cinema.",
-                            "cost": 2800
-                        }
-                    ]
-                },
-                {
-                    "day": 2,
-                    "theme": "Subterranean Vinyl & Archival Vintage Craft",
-                    "neighborhood": "Shimokitazawa",
-                    "activities": [
-                        {
-                            "time_slot": "Morning (10:00 - 12:30)",
-                            "title": "Third-Wave Pour-Overs & Independent Zine Discovery",
-                            "category": "Café Culture",
-                            "neighborhood": "Shimokitazawa",
-                            "description": "Start at Bear Pond Espresso for an uncompromising flower child espresso shot, followed by zine hunting at City Country City.",
-                            "cultural_connection": "Appeals to your taste for authentic third-wave coffee craft and indie print media.",
-                            "cost": 800
-                        },
-                        {
-                            "time_slot": "Afternoon (13:30 - 17:30)",
-                            "title": "Vintage Denim Curators & Hidden Basement Record Crates",
-                            "category": "Music & Fashion",
-                            "neighborhood": "Shimokitazawa",
-                            "description": "Crate-dig for rare Japanese ambient and techno vinyl at Flash Disc Ranch and browse curated vintage workwear.",
-                            "cultural_connection": "Matches your dual passions for underground music and tactile streetwear history.",
-                            "cost": 2500
-                        },
-                        {
-                            "time_slot": "Night (19:00 - 23:00)",
-                            "title": "Basement Live House & Craft Beer Hideaway",
-                            "category": "Nightlife",
-                            "neighborhood": "Shimokitazawa",
-                            "description": "Catch an intimate experimental live performance at Shelter or enjoy seasonal craft ales at Ushitora.",
-                            "cultural_connection": "Connects with your underground music DNA away from mainstream commercial tourist traps.",
-                            "cost": 2200
-                        }
-                    ]
-                },
-                {
-                    "day": 3,
-                    "theme": "Architectural Sanctuaries & Ura-Harajuku Street Culture",
-                    "neighborhood": "Daikanyama & Omotesando",
-                    "activities": [
-                        {
-                            "time_slot": "Morning (09:30 - 12:30)",
-                            "title": "Daikanyama T-Site Book Sanctuary",
-                            "category": "Architecture & Art",
-                            "neighborhood": "Daikanyama",
-                            "description": "Explore the award-winning lattice architecture of Tsutaya Books, with rare art monographs and design journals.",
-                            "cultural_connection": "Qloo highlights strong cross-domain affinity between architectural curiosity and design literature.",
-                            "cost": 600
-                        },
-                        {
-                            "time_slot": "Afternoon (14:00 - 17:30)",
-                            "title": "Cat Street Streetwear Pilgrimage & Indigo Dye Atelier",
-                            "category": "Fashion",
-                            "neighborhood": "Harajuku / Shibuya",
-                            "description": "Walk the quieter backstreets of Ura-Harajuku visiting Undercover, Neighborhood, and natural indigo workshop Okura.",
-                            "cultural_connection": "Directly embodies your fashion DNA: minimalist silhouette craftsmanship.",
-                            "cost": 2000
-                        },
-                        {
-                            "time_slot": "Evening (18:30 - 22:00)",
-                            "title": "High-Fidelity Audiophile Listening Lounge",
-                            "category": "Music & Nightlife",
-                            "neighborhood": "Shibuya",
-                            "description": "Sip Japanese single malt in hushed reverence at Lion Café or Bar Bridge on custom McIntosh tube amplifiers.",
-                            "cultural_connection": "A uniquely Japanese cultural format where pure sound quality is treated with religious devotion.",
-                            "cost": 2500
-                        }
-                    ]
-                },
-                {
-                    "day": 4,
-                    "theme": "Canal-Side Art, Modern Gastronomy & Contemporary Galleries",
-                    "neighborhood": "Nakameguro & Roppongi",
-                    "activities": [
-                        {
-                            "time_slot": "Morning (10:00 - 13:00)",
-                            "title": "Meguro River Walk & Kengo Kuma Roastery Exploration",
-                            "category": "Architecture & Café",
-                            "neighborhood": "Nakameguro",
-                            "description": "Walk shaded canal banks lined with independent design ateliers and visit the copper-cascade architecture of the Reserve Roastery.",
-                            "cultural_connection": "Appeals to your appreciation for spatial craftsmanship and sensory slowing down.",
-                            "cost": 1100
-                        },
-                        {
-                            "time_slot": "Afternoon (14:30 - 17:30)",
-                            "title": "Mori Art Museum & Twilight City Panorama",
-                            "category": "Visual Arts",
-                            "neighborhood": "Roppongi",
-                            "description": "Witness cutting-edge contemporary Asian art exhibitions atop Roppongi Hills, concluding with 360-degree twilight vistas.",
-                            "cultural_connection": "Directly feeds your visual curiosity and appetite for macro urban perspectives.",
-                            "cost": 1800
-                        },
-                        {
-                            "time_slot": "Evening (19:00 - 23:00)",
-                            "title": "Modern Omakase & Natural Wine Izakaya",
-                            "category": "Gastronomy",
-                            "neighborhood": "Ebisu",
-                            "description": "Dine at a neo-izakaya pairing wild fermented sake and bio-dynamic natural wines with seasonal small plates.",
-                            "cultural_connection": "Grounded in your appreciation for culinary craft and innovative tradition.",
-                            "cost": 3400
-                        }
-                    ]
-                },
-                {
-                    "day": 5,
-                    "theme": "Subterranean Electronic Music & Sensory Finale",
-                    "neighborhood": "Akihabara & Roppongi/Shibuya",
-                    "activities": [
-                        {
-                            "time_slot": "Morning (10:30 - 13:00)",
-                            "title": "Vintage Synth & Modular Gear Exploration",
-                            "category": "Music & Tech",
-                            "neighborhood": "Ochanomizu & Akihabara",
-                            "description": "Browse vintage analog synthesizers at Five G and explore retro-futuristic electronics alleys.",
-                            "cultural_connection": "Directly ties your electronic music passion with hands-on sound synthesis culture.",
-                            "cost": 500
-                        },
-                        {
-                            "time_slot": "Afternoon (14:30 - 17:30)",
-                            "title": "Nezu Museum Garden Sanctuary",
-                            "category": "Architecture & Nature",
-                            "neighborhood": "Aoyama",
-                            "description": "Experience Kengo Kuma's bamboo corridor leading into a private strolling garden of stone lanterns and moss streams.",
-                            "cultural_connection": "Offers an essential counterbalance to high-velocity neon with meditative Japanese minimalism.",
-                            "cost": 1200
-                        },
-                        {
-                            "time_slot": "Night (22:00 - Late)",
-                            "title": "Vent Tokyo / Contact Sound System Night",
-                            "category": "Nightlife & Music",
-                            "neighborhood": "Omotesando / Shibuya",
-                            "description": "Immerse yourself in world-renowned acoustic sound architecture powered by custom SR sound systems.",
-                            "cultural_connection": "The pinnacle of your techno and electronic music affinity.",
-                            "cost": 3000
-                        }
-                    ]
-                }
-            ]
-        else:
-            # Fallback for Berlin or other cities
-            day_plans = [
-                {
-                    "day": 1,
-                    "theme": "Industrial Heritage & Sound Foundations",
-                    "neighborhood": "Kreuzberg & Friedrichshain",
-                    "activities": [
-                        {
-                            "time_slot": "Morning",
-                            "title": "Bauhaus Archive & Cold War Memorial Walks",
-                            "category": "Architecture",
-                            "neighborhood": "Tiergarten",
-                            "description": "Study modernist design foundations and concrete monumentalism.",
-                            "cultural_connection": "Matches your architectural aesthetic.",
-                            "cost": 800
-                        },
-                        {
-                            "time_slot": "Afternoon",
-                            "title": "Hard Wax Vinyl Sanctuary",
-                            "category": "Music",
-                            "neighborhood": "Kreuzberg",
-                            "description": "Pilgrimage to the legendary vinyl home of Berlin and Detroit techno.",
-                            "cultural_connection": "Core expression of underground electronic culture.",
-                            "cost": 1800
-                        },
-                        {
-                            "time_slot": "Night",
-                            "title": "Subterranean Sound Immersion",
-                            "category": "Nightlife",
-                            "neighborhood": "Friedrichshain",
-                            "description": "Experience industrial acoustics and world-class sound staging.",
-                            "cultural_connection": "Uncompromising nightlife alignment.",
-                            "cost": 2500
-                        }
-                    ]
-                }
-            ]
+        # Extract real Qloo places where available
+        qloo_place_names = [ev.target_affinity for ev in city.qloo_evidence] if city.qloo_evidence else []
 
-        # Slice to requested duration
-        trimmed_days = day_plans[:duration]
-        total_spent = sum(act.get("cost", 1000) for d in trimmed_days for act in d.get("activities", []))
+        day_plans: List[Dict[str, Any]] = []
 
-        # Adjust costs proportionally if budget constraint is tighter
-        budget_scaling = 1.0
-        if budget_inr > 0 and total_spent > budget_inr:
-            budget_scaling = budget_inr / total_spent
+        day_themes = [
+            ("Architectural Geometries & Design Foundations", "Architecture & Form"),
+            ("Sonic Culture, Vinyl Crate Digging & Third Spaces", "Music & Third Spaces"),
+            ("Contemporary Art, Independent Publications & Ateliers", "Contemporary Art"),
+            ("Culinary Dedication, Markets & Midnight Flavors", "Gastronomy Craft"),
+            ("Cinematic Noir Alleys & Subterranean Nightlife", "Cinema & Nightlife"),
+            ("Hidden Courtyards, Craft Ateliers & Slow Contemplation", "Craft & Solitude"),
+            ("Local Subcultures, Vintage Archives & Sound Rituals", "Subculture & Sound")
+        ]
+
+        for i in range(safe_duration):
+            theme_title, theme_cat = day_themes[i % len(day_themes)]
+            curr_neighborhood = neighborhood_names[i % len(neighborhood_names)]
+            next_neighborhood = neighborhood_names[(i + 1) % len(neighborhood_names)]
+
+            # Morning activity
+            spot1 = qloo_place_names[i % len(qloo_place_names)] if qloo_place_names else f"{city.name} Modernist District"
+            cost_morning = int(daily_allowance * 0.22)
+            act1 = {
+                "time_slot": "Morning (09:30 - 12:30)",
+                "title": f"{curr_neighborhood}: {theme_cat} Walk & Specialty Coffee",
+                "category": "Architecture & Café",
+                "neighborhood": curr_neighborhood,
+                "description": f"Begin with single-origin pour-overs, followed by an intentional exploration of {curr_neighborhood}'s distinctive streetscapes and {spot1}.",
+                "cultural_connection": f"Reflects your high appreciation for craft and spatial design in {city.name}.",
+                "cost": max(cost_morning, 400)
+            }
+
+            # Afternoon activity
+            cost_afternoon = int(daily_allowance * 0.35)
+            act2 = {
+                "time_slot": "Afternoon (14:00 - 17:30)",
+                "title": f"Independent Gallery Exploration & Crate Hunting in {next_neighborhood}",
+                "category": "Art & Subculture",
+                "neighborhood": next_neighborhood,
+                "description": f"Browse contemporary design ateliers, independent zine publishers, and curated record collections in {next_neighborhood}.",
+                "cultural_connection": "Grounds your cultural journey in non-commercial artistic expression.",
+                "cost": max(cost_afternoon, 800)
+            }
+
+            # Evening activity
+            cost_evening = int(daily_allowance * 0.43)
+            act3 = {
+                "time_slot": "Evening (19:30 - Late)",
+                "title": f"Regional Tasting Menu & Subterranean Listening Den",
+                "category": "Gastronomy & Nightlife",
+                "neighborhood": curr_neighborhood,
+                "description": f"Savor celebrated local gastronomy, then transition to an intimate listening bar or local acoustic venue.",
+                "cultural_connection": f"Verified by Qloo taste graph affinities between your sonic preferences and {city.name}'s night culture.",
+                "cost": max(cost_evening, 1200)
+            }
+
+            day_plans.append({
+                "day": i + 1,
+                "theme": f"Day {i + 1}: {theme_title}",
+                "neighborhood": curr_neighborhood,
+                "activities": [act1, act2, act3]
+            })
 
         generated_days: List[ItineraryDay] = []
-        for d in trimmed_days:
+        for d in day_plans:
             acts = []
             for a in d["activities"]:
                 acts.append(ItineraryActivity(
@@ -770,7 +1105,7 @@ class CulturalEngine:
                     neighborhood=a["neighborhood"],
                     description=a["description"],
                     cultural_connection=a["cultural_connection"],
-                    estimated_cost_inr=int(a["cost"] * budget_scaling)
+                    estimated_cost_inr=a["cost"]
                 ))
             generated_days.append(ItineraryDay(
                 day_number=d["day"],
@@ -780,13 +1115,13 @@ class CulturalEngine:
             ))
 
         return Itinerary(
-            id=f"itin-{city.id}-{duration}d",
+            id=f"itin-{city.id}-{safe_duration}d",
             city_name=city.name,
-            duration_days=duration,
+            duration_days=safe_duration,
             total_budget_inr=budget_inr,
             travel_style=travel_style,
             days=generated_days,
-            cultural_notes=f"Curated precisely around your Cultural DNA pillars, emphasizing non-commercial local culture and cross-domain taste connections verified by Qloo."
+            cultural_notes=f"Curated around your Cultural DNA pillars, emphasizing non-commercial local culture and cross-domain taste connections verified by Qloo in {city.name}."
         )
 
 cultural_engine = CulturalEngine()
